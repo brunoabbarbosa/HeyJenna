@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory, redirect, url_for, jsonify
+from flask import Flask, request, render_template, send_from_directory, redirect, url_for, jsonify, Response
 import os
 import uuid
 import whisper
@@ -8,8 +8,9 @@ from googletrans import Translator
 import yt_dlp
 import re
 from config import get_config
+import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Load configuration
 config_class = get_config()
@@ -18,6 +19,7 @@ app.config.from_object(config_class)
 # Create directories
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['SUBTITLE_FOLDER'], exist_ok=True)
+os.makedirs('static/SVG', exist_ok=True)
 
 # Initialize Whisper model
 print(f"Loading Whisper model: {app.config['WHISPER_MODEL']}")
@@ -26,6 +28,18 @@ translator = Translator()
 
 # Get cookie files from config
 COOKIE_FILES = app.config['COOKIE_FILES']
+
+# Console log storage
+console_logs = []
+
+def log_to_console(message):
+    """Add message to console logs"""
+    timestamp = time.strftime("%H:%M:%S")
+    log_entry = f"[{timestamp}] {message}"
+    console_logs.append(log_entry)
+    # Keep only last 1000 entries
+    if len(console_logs) > 1000:
+        console_logs.pop(0)
 
 def get_cookies_file(url):
     """Get the appropriate cookies file for a URL"""
@@ -57,9 +71,7 @@ def normalize_filename(title, extractor_key, uploader, is_mp3=False):
 
 @app.route('/')
 def index():
-    files = os.listdir(app.config['UPLOAD_FOLDER'])
-    files.sort(key=lambda x: os.path.getmtime(os.path.join(app.config['UPLOAD_FOLDER'], x)), reverse=True)
-    return render_template("index.html", files=files)
+    return redirect(url_for('dl'))
 
 @app.route('/dl')
 def dl():
@@ -80,71 +92,22 @@ def transcribe():
     transcripts.sort(key=lambda x: os.path.getmtime(os.path.join(app.config['SUBTITLE_FOLDER'], x)), reverse=True)
     return render_template("transcribe.html", downloads=downloads, transcripts=transcripts)
 
-@app.route('/process', methods=['POST'])
-def process():
-    data = request.get_json()
-    url = data.get('url', '').strip()
-    
-    if not url:
-        return jsonify({'error': 'No URL provided'})
-    
-    try:
-        uid = str(uuid.uuid4())[:8]
-        
-        # Get cookies file for this URL
-        cookies_file = get_cookies_file(url)
-        
-        # Enhanced yt-dlp options using config
-        ydl_opts = {
-            'format': app.config['VIDEO_QUALITY'],
-            'outtmpl': os.path.join(app.config['UPLOAD_FOLDER'], f'{uid}.%(ext)s'),
-            'quiet': True,
-            'no_warnings': True,
-            'user_agent': app.config['USER_AGENT'],
-            'retries': 3,
-            'fragment_retries': 3,
-            'skip_unavailable_fragments': True,
-        }
-        
-        # Add cookies if available
-        if cookies_file:
-            ydl_opts['cookiefile'] = cookies_file
-        
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Extract info first
-            meta = ydl.extract_info(url, download=False)
-            title = meta.get('title', 'video')
-            extractor_key = meta.get('extractor_key', 'Unknown')
-            uploader = meta.get('uploader', 'unknown')
-            
-            # Download the file
-            ydl.download([url])
-            
-            # Find the downloaded file
-            downloaded_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.startswith(uid)]
-            if not downloaded_files:
-                raise Exception("No file downloaded")
-            
-            temp_file = os.path.join(app.config['UPLOAD_FOLDER'], downloaded_files[0])
-            
-            # Normalize filename
-            normalized_name = normalize_filename(title, extractor_key, uploader)
-            final_file = os.path.join(app.config['UPLOAD_FOLDER'], normalized_name)
-            
-            # Rename to final name
-            if os.path.exists(temp_file):
-                os.rename(temp_file, final_file)
-            
-            return jsonify({
-                'success': True,
-                'title': title,
-                'filename': normalized_name,
-                'uploader': uploader,
-                'platform': extractor_key
-            })
+@app.route('/console')
+def console():
+    return render_template("console.html")
 
-    except Exception as e:
-        return jsonify({'error': str(e)})
+@app.route('/console/stream')
+def console_stream():
+    def generate():
+        last_index = 0
+        while True:
+            if len(console_logs) > last_index:
+                for i in range(last_index, len(console_logs)):
+                    yield f"data: {console_logs[i]}\n\n"
+                last_index = len(console_logs)
+            time.sleep(0.1)
+    
+    return Response(generate(), mimetype='text/event-stream')
 
 @app.route('/download', methods=['POST'])
 def download():
@@ -154,8 +117,11 @@ def download():
     transcribe = data.get('transcribe', False)
     results = []
 
+    log_to_console(f"Starting download of {len(links)} links")
+
     for i, url in enumerate(links):
         try:
+            log_to_console(f"Processing link {i+1}/{len(links)}: {url}")
             uid = str(uuid.uuid4())[:8]
             info = {'url': url, 'index': i}
             
@@ -178,14 +144,17 @@ def download():
             # Add cookies if available
             if cookies_file:
                 ydl_opts['cookiefile'] = cookies_file
+                log_to_console(f"Using cookies file: {cookies_file}")
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Extract info first
+                log_to_console(f"Extracting info for: {url}")
                 meta = ydl.extract_info(url, download=False)
                 title = meta.get('title', 'video')
                 extractor_key = meta.get('extractor_key', 'Unknown')
                 uploader = meta.get('uploader', 'unknown')
                 
+                log_to_console(f"Downloading: {title} from {extractor_key}")
                 # Download the file
                 ydl.download([url])
                 
@@ -204,6 +173,8 @@ def download():
                 if os.path.exists(temp_file):
                     os.rename(temp_file, final_file)
                 
+                log_to_console(f"Downloaded: {normalized_name}")
+                
                 info['filename'] = normalized_name
                 info['title'] = title
                 info['uploader'] = uploader
@@ -213,16 +184,19 @@ def download():
                 if mp3_only and not normalized_name.endswith('.mp3'):
                     audio_path = final_file.replace('.mp4', '.mp3')
                     try:
+                        log_to_console(f"Converting to MP3: {normalized_name}")
                         ffmpeg.input(final_file).output(audio_path, acodec='mp3').run(overwrite_output=True, quiet=True)
                         os.remove(final_file)  # Remove video file
                         info['filename'] = os.path.basename(audio_path)
                         final_file = audio_path
+                        log_to_console(f"Converted to MP3: {os.path.basename(audio_path)}")
                     except Exception as e:
-                        pass
+                        log_to_console(f"MP3 conversion failed: {str(e)}")
                 
                 # Transcribe if requested
                 if transcribe:
                     try:
+                        log_to_console(f"Transcribing: {normalized_name}")
                         result = model.transcribe(final_file)
                         text = result['text'].strip()
                         sub_file = normalized_name.replace('.mp4', '.txt').replace('.mp3', '.txt')
@@ -233,12 +207,15 @@ def download():
                         
                         info['transcript'] = sub_file
                         info['transcript_length'] = len(text)
+                        log_to_console(f"Transcription complete: {sub_file} ({len(text)} chars)")
                     except Exception as e:
                         info['transcript_error'] = str(e)
+                        log_to_console(f"Transcription failed: {str(e)}")
                 
                 results.append(info)
 
         except Exception as e:
+            log_to_console(f"Error processing {url}: {str(e)}")
             results.append({
                 'url': url, 
                 'index': i, 
@@ -246,9 +223,10 @@ def download():
                 'status': 'failed'
             })
 
+    log_to_console(f"Download session complete: {len([r for r in results if not r.get('error')])} successful, {len([r for r in results if r.get('error')])} failed")
     return jsonify(results)
 
-@app.route('/file/<path:filename>')
+@app.route('/downloads/<path:filename>')
 def download_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
@@ -266,114 +244,81 @@ def rename():
     if os.path.exists(old_path) and not os.path.exists(new_path):
         os.rename(old_path, new_path)
         return jsonify({'success': True})
-    return jsonify({'success': False})
+    else:
+        return jsonify({'success': False, 'error': 'File not found or new name already exists'})
 
 @app.route('/delete', methods=['POST'])
 def delete():
-    filename = request.form['filename']
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    target = request.form['target']
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], target)
     
     if os.path.exists(file_path):
         os.remove(file_path)
         return jsonify({'success': True})
-    return jsonify({'success': False})
+    else:
+        return jsonify({'success': False, 'error': 'File not found'})
 
 @app.route('/load_subtitle', methods=['POST'])
 def load_subtitle():
     filename = request.form['filename']
-    sub_file = filename.replace('.mp4', '.txt').replace('.mp3', '.txt')
-    sub_path = os.path.join(app.config['SUBTITLE_FOLDER'], sub_file)
+    file_path = os.path.join(app.config['SUBTITLE_FOLDER'], filename)
     
-    if os.path.exists(sub_path):
-        with open(sub_path, 'r', encoding='utf-8') as f:
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        return jsonify({'content': content})
-    return jsonify({'content': ''})
+        return jsonify({'content': content, 'success': True})
+    else:
+        return jsonify({'success': False, 'error': 'File not found'})
 
 @app.route('/translate', methods=['POST'])
 def translate():
     text = request.form['text']
-    src_lang = request.form.get('src_lang', 'auto')
-    target_lang = request.form.get('target_lang', 'en')
+    lang = request.form['lang']
     
     try:
-        result = translator.translate(text, src=src_lang, dest=target_lang)
-        return jsonify({'translated': result.text})
+        translated = translator.translate(text, dest=lang).text
+        return jsonify({'translated': translated, 'success': True})
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/files')
 def api_files():
+    """API endpoint to get list of files"""
     files = os.listdir(app.config['UPLOAD_FOLDER'])
-    files.sort(key=lambda x: os.path.getmtime(os.path.join(app.config['UPLOAD_FOLDER'], x)), reverse=True)
-    return jsonify(files)
-
-@app.route('/edit', methods=['POST'])
-def edit():
-    if 'file' not in request.files:
-        return 'No file uploaded', 400
+    file_info = []
     
-    file = request.files['file']
-    if file.filename == '':
-        return 'No file selected', 400
+    for file in files:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file)
+        file_info.append({
+            'name': file,
+            'size': os.path.getsize(file_path),
+            'modified': os.path.getmtime(file_path),
+            'type': 'video' if file.endswith(('.mp4', '.webm', '.mkv')) else 'audio' if file.endswith('.mp3') else 'other'
+        })
     
-    if file:
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-        
-        src_lang = request.form.get('src_lang', 'auto')
-        target_lang = request.form.get('target_lang', '')
-        
-        try:
-            result = model.transcribe(filepath)
-            text = result['text'].strip()
-            
-            if target_lang and target_lang != src_lang:
-                try:
-                    translated = translator.translate(text, src=src_lang, dest=target_lang)
-                    translated_text = translated.text
-                    
-                    # Save translated transcript
-                    translated_filename = filename.replace('.mp4', '_translated.txt').replace('.mp3', '_translated.txt')
-                    translated_path = os.path.join(app.config['SUBTITLE_FOLDER'], translated_filename)
-                    with open(translated_path, 'w', encoding='utf-8') as f:
-                        f.write(translated_text)
-                except Exception as e:
-                    translated_text = f"Translation error: {str(e)}"
-            else:
-                translated_text = None
-            
-            return render_template('transcribe.html', transcription=text, filename=filename, translated=translated_text)
-            
-        except Exception as e:
-            return f'Error transcribing file: {str(e)}', 500
+    # Sort by modification time (newest first)
+    file_info.sort(key=lambda x: x['modified'], reverse=True)
+    return jsonify(file_info)
 
-@app.route('/save_transcript', methods=['POST'])
-def save_transcript():
-    text = request.form['text']
+@app.route('/transcribe_file', methods=['POST'])
+def transcribe_file():
     filename = request.form['filename']
-    
-    sub_file = filename.replace('.mp4', '.txt').replace('.mp3', '.txt')
-    sub_path = os.path.join(app.config['SUBTITLE_FOLDER'], sub_file)
-    
-    with open(sub_path, 'w', encoding='utf-8') as f:
-        f.write(text)
-    
-    return redirect(url_for('transcribe'))
-
-@app.route('/console')
-def console():
-    return render_template('console.html')
-
-@app.route('/console/stream')
-def console_stream():
-    def generate():
-        # This is a placeholder for console streaming
-        # In a real implementation, you'd stream actual console output
-        yield "data: Console output would appear here\n\n"
-    
-    return app.response_class(generate(), mimetype='text/plain')
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.exists(file_path):
+        return jsonify({'success': False, 'error': 'File not found'}), 404
+    try:
+        log_to_console(f"Transcribing file: {filename}")
+        result = model.transcribe(file_path)
+        text = result['text'].strip()
+        sub_file = filename.rsplit('.', 1)[0] + '.txt'
+        sub_path = os.path.join(app.config['SUBTITLE_FOLDER'], sub_file)
+        with open(sub_path, 'w', encoding='utf-8') as f:
+            f.write(text)
+        log_to_console(f"Transcription complete: {sub_file}")
+        return jsonify({'success': True, 'content': text, 'transcript': sub_file})
+    except Exception as e:
+        log_to_console(f"Transcription failed: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     print(f"🚀 Starting Jenna The Temp on {app.config['HOST']}:{app.config['PORT']}")

@@ -3,45 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcribe - Video Downloader</title>
+    <title>Jenna The Temp - Transcribe</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    
+    <!-- Manrope Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        .sidebar-section {
-            margin-bottom: 1.5rem;
-        }
-        .sidebar-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #6366f1;
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.02em;
-        }
-        .sidebar-list {
-            background: #f3f4f6;
-            border-radius: 0.5rem;
-            padding: 0.5rem 0.25rem;
-        }
-        .sidebar-item {
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            margin-bottom: 0.25rem;
-            font-size: 0.95rem;
-            color: #374151;
-            transition: background 0.15s;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 220px;
-            display: block;
-        }
-        .sidebar-item.selected, .sidebar-item:hover {
-            background: #6366f1;
-            color: #fff;
-        }
+        body { font-family: 'Manrope', sans-serif; }
     </style>
 </head>
+
 <body class="bg-gray-50">
     <div class="min-h-screen">
         <!-- Navigation -->
@@ -50,7 +26,10 @@
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <div class="flex-shrink-0 flex items-center">
-                            <h1 class="text-xl font-bold text-gray-900">Jeff The Temp</h1>
+                            <div class="flex items-center">
+                                <img src="/static/SVG/jenna.svg" alt="Jenna" class="w-8 h-8 mr-3">
+                                <h1 class="text-xl font-bold text-gray-900">Jenna The Temp</h1>
+                            </div>
                         </div>
                         <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                             <a href="/dl" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
@@ -71,45 +50,61 @@
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div class="px-4 py-6 sm:px-0">
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    <!-- Sidebar -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- File Selection Section -->
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-lg shadow p-4">
-                            <div class="sidebar-section">
-                                <div class="sidebar-title">Downloads <span class="text-xs text-gray-400">(newest first)</span></div>
-                                <div class="sidebar-list">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-6">Transcribe Files</h2>
+                            
+                            <div class="mb-6">
+                                <label for="fileSelect" class="block text-sm font-medium text-gray-700 mb-2">Select a file to transcribe</label>
+                                <select id="fileSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Choose a file...</option>
                                     {% for file in downloads %}
-                                        <div class="sidebar-item" title="{{ file }}" onclick="selectDownload('{{ file }}')" data-filename="{{ file }}">
-                                            {{ file }}
-                                        </div>
-                                    {% else %}
-                                        <div class="text-xs text-gray-400 px-4 py-2">No downloads</div>
+                                    <option value="{{ file }}">{{ file }}</option>
                                     {% endfor %}
-                                </div>
+                                </select>
                             </div>
-                            <div class="sidebar-section">
-                                <div class="sidebar-title">Transcripts <span class="text-xs text-gray-400">(newest first)</span></div>
-                                <div class="sidebar-list">
-                                    {% for file in transcripts %}
-                                        <div class="sidebar-item" title="{{ file }}" onclick="selectTranscript('{{ file }}')" data-filename="{{ file }}">
-                                            {{ file }}
-                                        </div>
-                                    {% else %}
-                                        <div class="text-xs text-gray-400 px-4 py-2">No transcripts</div>
-                                    {% endfor %}
+                            
+                            <button id="transcribeBtn" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                Transcribe
+                            </button>
+                            
+                            <div id="transcribeStatus" class="mt-4"></div>
+                        </div>
+                        
+                        <!-- Available Transcripts -->
+                        <div class="bg-white rounded-lg shadow p-6 mt-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Available Transcripts</h3>
+                            
+                            <div class="space-y-3">
+                                {% for transcript in transcripts %}
+                                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                    <span class="text-sm font-medium text-gray-900">{{ transcript }}</span>
+                                    <div class="flex space-x-2">
+                                        <button onclick="loadTranscript('{{ transcript }}')" class="text-indigo-600 hover:text-indigo-900 text-sm">View</button>
+                                        <a href="/subtitles/{{ transcript }}" class="text-green-600 hover:text-green-900 text-sm">Download</a>
+                                    </div>
                                 </div>
+                                {% endfor %}
                             </div>
+                            
+                            {% if not transcripts %}
+                            <div class="text-center py-8 text-gray-500">
+                                <p>No transcripts available yet.</p>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
-
-                    <!-- Transcript Editor -->
-                    <div class="lg:col-span-3">
+                    
+                    <!-- Transcript Display and Translation -->
+                    <div class="lg:col-span-2">
                         <div class="bg-white rounded-lg shadow p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-lg font-medium text-gray-900">Transcript Editor</h2>
+                                <h3 class="text-lg font-medium text-gray-900">Transcript & Translation</h3>
                                 <div class="flex space-x-2">
-                                    <select id="languageSelect" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        <option value="en">English</option>
+                                    <select id="translateLang" class="px-3 py-1 border border-gray-300 rounded text-sm">
+                                        <option value="">Translate to...</option>
                                         <option value="es">Spanish</option>
                                         <option value="fr">French</option>
                                         <option value="de">German</option>
@@ -122,74 +117,41 @@
                                         <option value="ar">Arabic</option>
                                         <option value="hi">Hindi</option>
                                     </select>
-                                    <button 
-                                        id="translateBtn" 
-                                        onclick="translateText()"
-                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
-                                        </svg>
-                                        Translate
-                                    </button>
+                                    <button id="translateBtn" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Translate</button>
                                 </div>
                             </div>
                             
-                            <div class="space-y-4">
-                                <!-- Original Text -->
-                                <div>
-                                    <label for="originalText" class="block text-sm font-medium text-gray-700 mb-2">Original Transcript</label>
-                                    <textarea 
-                                        id="originalText" 
-                                        rows="12" 
-                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                        placeholder="Select a transcript or download file to view or transcribe..."></textarea>
+                            <!-- Original Transcript -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Original Transcript</label>
+                                <textarea id="originalText" rows="12" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Select a transcript or transcribe a file to view content..."></textarea>
+                            </div>
+                            
+                            <!-- Translation -->
+                            <div id="translationSection" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Translation</label>
+                                <textarea id="translatedText" rows="12" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Translation will appear here..."></textarea>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                                <div class="flex space-x-2">
+                                    <button id="saveBtn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Save Changes
+                                    </button>
+                                    <button id="downloadBtn" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Download
+                                    </button>
                                 </div>
                                 
-                                <!-- Translated Text -->
-                                <div id="translationSection" class="hidden">
-                                    <label for="translatedText" class="block text-sm font-medium text-gray-700 mb-2">Translation</label>
-                                    <textarea 
-                                        id="translatedText" 
-                                        rows="12" 
-                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                        placeholder="Translation will appear here..."></textarea>
-                                </div>
-                                
-                                <!-- Actions -->
-                                <div class="flex justify-between items-center pt-4 border-t border-gray-200">
-                                    <div class="flex space-x-2">
-                                        <button 
-                                            id="transcribeBtn" 
-                                            onclick="transcribeSelected()"
-                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed hidden">
-                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Transcribe
-                                        </button>
-                                        <button 
-                                            id="saveBtn" 
-                                            onclick="saveTranscript()"
-                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Save Changes
-                                        </button>
-                                        <button 
-                                            id="downloadBtn" 
-                                            onclick="downloadTranscript()"
-                                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            Download
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="text-sm text-gray-500">
-                                        <span id="charCount">0 characters</span>
-                                    </div>
+                                <div class="text-sm text-gray-500">
+                                    <span id="charCount">0 characters</span>
                                 </div>
                             </div>
                         </div>
@@ -199,224 +161,216 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
     <script>
         let currentFilename = null;
         let originalContent = '';
-        let selectedType = null; // 'download' or 'transcript'
 
         document.addEventListener('DOMContentLoaded', function() {
+            const transcribeBtn = document.getElementById('transcribeBtn');
+            const fileSelect = document.getElementById('fileSelect');
+            const originalText = document.getElementById('originalText');
+            const translatedText = document.getElementById('translatedText');
+            const saveBtn = document.getElementById('saveBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const translateBtn = document.getElementById('translateBtn');
+            const translationSection = document.getElementById('translationSection');
+
             // Character count
-            document.getElementById('originalText').addEventListener('input', function() {
+            originalText.addEventListener('input', function() {
                 updateCharCount();
             });
+
+            // Transcribe button
+            transcribeBtn.addEventListener('click', async function() {
+                const filename = fileSelect.value;
+                const statusDiv = document.getElementById('transcribeStatus');
+                
+                if (!filename) {
+                    statusDiv.innerHTML = '<div class="text-red-600">Please select a file</div>';
+                    return;
+                }
+                
+                statusDiv.innerHTML = '<div class="text-blue-600">Transcribing...</div>';
+                transcribeBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('/transcribe_file', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `filename=${encodeURIComponent(filename)}`
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        statusDiv.innerHTML = '<div class="text-green-600">Transcription completed!</div>';
+                        originalText.value = result.content;
+                        originalContent = result.content;
+                        currentFilename = result.transcript;
+                        
+                        // Enable buttons
+                        saveBtn.disabled = false;
+                        downloadBtn.disabled = false;
+                        
+                        // Update character count
+                        updateCharCount();
+                        
+                        // Hide translation section
+                        translationSection.classList.add('hidden');
+                        
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        statusDiv.innerHTML = `<div class="text-red-600">Error: ${result.error}</div>`;
+                    }
+                } catch (error) {
+                    statusDiv.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
+                } finally {
+                    transcribeBtn.disabled = false;
+                }
+            });
+
+            // Load transcript
+            window.loadTranscript = async function(filename) {
+                try {
+                    const response = await fetch('/load_subtitle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `filename=${encodeURIComponent(filename)}`
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        originalText.value = result.content;
+                        originalContent = result.content;
+                        currentFilename = filename;
+                        
+                        // Enable buttons
+                        saveBtn.disabled = false;
+                        downloadBtn.disabled = false;
+                        
+                        // Update character count
+                        updateCharCount();
+                        
+                        // Hide translation section
+                        translationSection.classList.add('hidden');
+                    } else {
+                        showNotification('Error: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error: ' + error.message, 'error');
+                }
+            };
+
+            // Translate button
+            translateBtn.addEventListener('click', async function() {
+                const lang = document.getElementById('translateLang').value;
+                const content = originalText.value;
+                
+                if (!lang || !content) {
+                    showNotification('Please select a language and ensure there is content to translate', 'error');
+                    return;
+                }
+                
+                try {
+                    translateBtn.disabled = true;
+                    translateBtn.textContent = 'Translating...';
+                    
+                    const response = await fetch('/translate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `text=${encodeURIComponent(content)}&lang=${lang}`
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        translatedText.value = result.translated;
+                        translationSection.classList.remove('hidden');
+                    } else {
+                        showNotification('Translation error: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error: ' + error.message, 'error');
+                } finally {
+                    translateBtn.disabled = false;
+                    translateBtn.textContent = 'Translate';
+                }
+            });
+
+            // Save button
+            saveBtn.addEventListener('click', function() {
+                const content = originalText.value;
+                
+                if (!currentFilename || !content.trim()) {
+                    showNotification('No transcript to save', 'error');
+                    return;
+                }
+                
+                // Create a blob and download it
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFilename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('Transcript saved successfully', 'success');
+            });
+
+            // Download button
+            downloadBtn.addEventListener('click', function() {
+                const content = originalText.value;
+                
+                if (!content.trim()) {
+                    showNotification('No content to download', 'error');
+                    return;
+                }
+                
+                // Create a blob and download it
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFilename || 'transcript.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('Transcript downloaded successfully', 'success');
+            });
+
+            function updateCharCount() {
+                const charCount = document.getElementById('charCount');
+                const count = originalText.value.length;
+                charCount.textContent = `${count} characters`;
+            }
+
+            function showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+                    type === 'success' ? 'bg-green-500 text-white' :
+                    type === 'error' ? 'bg-red-500 text-white' :
+                    'bg-blue-500 text-white'
+                }`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
         });
-
-        function selectDownload(filename) {
-            clearSidebarSelection();
-            document.querySelector(`.sidebar-item[data-filename='${filename}']`).classList.add('selected');
-            selectedType = 'download';
-            currentFilename = filename;
-            document.getElementById('originalText').value = '';
-            document.getElementById('translationSection').classList.add('hidden');
-            document.getElementById('transcribeBtn').classList.remove('hidden');
-            document.getElementById('saveBtn').disabled = true;
-            document.getElementById('downloadBtn').disabled = true;
-            updateCharCount();
-        }
-
-        function selectTranscript(filename) {
-            clearSidebarSelection();
-            document.querySelector(`.sidebar-item[data-filename='${filename}']`).classList.add('selected');
-            selectedType = 'transcript';
-            currentFilename = filename;
-            document.getElementById('transcribeBtn').classList.add('hidden');
-            loadTranscript(filename);
-        }
-
-        function clearSidebarSelection() {
-            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('selected'));
-        }
-
-        async function loadTranscript(filename) {
-            try {
-                const formData = new FormData();
-                formData.append('filename', filename);
-                
-                const response = await fetch('/load_subtitle', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    const originalText = document.getElementById('originalText');
-                    originalText.value = result.content;
-                    originalContent = result.content;
-                    
-                    // Enable buttons
-                    document.getElementById('saveBtn').disabled = false;
-                    document.getElementById('downloadBtn').disabled = false;
-                    
-                    // Update character count
-                    updateCharCount();
-                    
-                    // Hide translation section
-                    document.getElementById('translationSection').classList.add('hidden');
-                } else {
-                    showNotification('Failed to load transcript: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Error loading transcript: ' + error.message, 'error');
-            }
-        }
-
-        async function transcribeSelected() {
-            if (!currentFilename || selectedType !== 'download') return;
-            document.getElementById('transcribeBtn').disabled = true;
-            document.getElementById('transcribeBtn').textContent = 'Transcribing...';
-            try {
-                const data = new FormData();
-                data.append('filename', currentFilename);
-                const response = await fetch('/transcribe_file', {
-                    method: 'POST',
-                    body: data
-                });
-                const result = await response.json();
-                if (result.success) {
-                    const originalText = document.getElementById('originalText');
-                    originalText.value = result.content;
-                    originalContent = result.content;
-                    document.getElementById('saveBtn').disabled = false;
-                    document.getElementById('downloadBtn').disabled = false;
-                    updateCharCount();
-                    showNotification('Transcription complete!', 'success');
-                } else {
-                    showNotification('Transcription failed: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Error during transcription: ' + error.message, 'error');
-            } finally {
-                document.getElementById('transcribeBtn').disabled = false;
-                document.getElementById('transcribeBtn').textContent = 'Transcribe';
-            }
-        }
-
-        async function translateText() {
-            const originalText = document.getElementById('originalText');
-            const languageSelect = document.getElementById('languageSelect');
-            const translateBtn = document.getElementById('translateBtn');
-            
-            if (!originalText.value.trim()) {
-                showNotification('Please load a transcript first', 'error');
-                return;
-            }
-            
-            try {
-                // Show loading state
-                translateBtn.disabled = true;
-                translateBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Translating...';
-                
-                const formData = new FormData();
-                formData.append('text', originalText.value);
-                formData.append('lang', languageSelect.value);
-                
-                const response = await fetch('/translate', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    const translatedText = document.getElementById('translatedText');
-                    translatedText.value = result.translated;
-                    
-                    // Show translation section
-                    document.getElementById('translationSection').classList.remove('hidden');
-                } else {
-                    showNotification('Translation failed: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Error during translation: ' + error.message, 'error');
-            } finally {
-                // Reset button state
-                translateBtn.disabled = false;
-                translateBtn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>Translate';
-            }
-        }
-
-        function saveTranscript() {
-            const originalText = document.getElementById('originalText');
-            const content = originalText.value;
-            
-            if (!currentFilename || !content.trim()) {
-                showNotification('No transcript to save', 'error');
-                return;
-            }
-            
-            // Create a blob and download it
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = currentFilename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            showNotification('Transcript saved successfully', 'success');
-        }
-
-        function downloadTranscript() {
-            const originalText = document.getElementById('originalText');
-            const content = originalText.value;
-            
-            if (!content.trim()) {
-                showNotification('No content to download', 'error');
-                return;
-            }
-            
-            // Create a blob and download it
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = currentFilename || 'transcript.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            showNotification('Transcript downloaded successfully', 'success');
-        }
-
-        function updateCharCount() {
-            const originalText = document.getElementById('originalText');
-            const charCount = document.getElementById('charCount');
-            const count = originalText.value.length;
-            charCount.textContent = `${count} characters`;
-        }
-
-        function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
-                type === 'success' ? 'bg-green-500 text-white' :
-                type === 'error' ? 'bg-red-500 text-white' :
-                'bg-blue-500 text-white'
-            }`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
     </script>
 </body>
 </html> 

@@ -1,4 +1,4 @@
-# Changelog - Jeff The Temp
+# Changelog - Jenna The Temp
 
 ## Project Cleanup & GitHub Preparation
 
@@ -11,23 +11,23 @@
 
 #### 📁 **Final Project Structure**
 ```
-jeff-the-temp/
-├── heyjeff.py              # Main Flask application
-├── config.py               # Configuration management
-├── setup.py                # Setup script for easy installation
-├── requirements.txt        # Python dependencies
-├── README.md               # Comprehensive documentation
-├── .gitignore             # Git ignore rules
-├── CHANGELOG.md           # This file
-├── templates/             # HTML templates
-│   ├── dl.html           # Download interface
-│   ├── sort.html         # File management
-│   ├── transcribe.html   # Transcription interface
-│   ├── console.html      # Debug console
-│   └── index.html        # Alternative interface
-├── downloads/            # Downloaded files (gitignored)
-├── subtitles/           # Generated transcripts (gitignored)
-└── *.txt                # Cookie files (gitignored)
+jenna-the-temp/
+├── heynjenna.py              # Main Flask application
+├── config.py                 # Configuration management
+├── setup.py                 # Setup script for easy installation
+├── requirements.txt          # Python dependencies
+├── README.md                # Comprehensive documentation
+├── .gitignore              # Git ignore rules
+├── CHANGELOG.md             # This file
+├── templates/              # HTML templates
+│   ├── dl.html             # Download interface
+│   ├── sort.html           # File management
+│   ├── transcribe.html      # Transcription interface
+│   ├── console.html         # Debug console
+│   └── index.html           # Alternative interface
+├── downloads/              # Downloaded files (gitignored)
+├── subtitles/              # Generated transcripts (gitignored)
+└── *.txt                  # Cookie files (gitignored)
 ```
 
 #### 🔧 **Improvements Made**
@@ -38,7 +38,7 @@ jeff-the-temp/
    - Configurable Whisper models, video quality, etc.
 
 2. **Enhanced Main Application**
-   - Updated `heyjeff.py` to use configuration system
+   - Updated `heynjenna.py` to use configuration system
    - Added missing `/console` and `/console/stream` routes
    - Better startup messages with configuration info
 
@@ -73,7 +73,7 @@ The project is now clean and ready for GitHub with:
    ```bash
    git init
    git add .
-   git commit -m "Initial commit: Jeff The Temp - Multi-Platform Video Downloader"
+   git commit -m "Initial commit: Jenna The Temp - Multi-Platform Video Downloader"
    ```
 
 2. **Create GitHub Repository**

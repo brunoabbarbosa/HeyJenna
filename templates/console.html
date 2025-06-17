@@ -3,62 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Console - Video Downloader</title>
+    <title>Jenna The Temp - Console</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Manrope Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        .console-text {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        .console-container {
-            background-color: #1a1a1a;
-            color: #00ff00;
-            border: 1px solid #333;
-            border-radius: 4px;
-        }
-        .console-line {
-            padding: 1px 8px;
-            border-bottom: 1px solid #2a2a2a;
-        }
-        .console-line:hover {
-            background-color: #2a2a2a;
-        }
-        .console-line.success {
-            color: #00ff00;
-        }
-        .console-line.error {
-            color: #ff4444;
-        }
-        .console-line.info {
-            color: #4444ff;
-        }
-        .console-line.warning {
-            color: #ffaa00;
-        }
+        body { font-family: 'Manrope', sans-serif; }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+
+<body class="bg-gray-50">
     <div class="min-h-screen">
         <!-- Navigation -->
-        <nav class="bg-gray-800 shadow-sm border-b border-gray-700">
+        <nav class="bg-white shadow-sm border-b">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <div class="flex-shrink-0 flex items-center">
-                            <h1 class="text-xl font-bold text-white">Video Downloader Console</h1>
+                            <div class="flex items-center">
+                                <img src="/static/SVG/jenna.svg" alt="Jenna" class="w-8 h-8 mr-3">
+                                <h1 class="text-xl font-bold text-gray-900">Jenna The Temp</h1>
+                            </div>
                         </div>
                         <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <a href="/dl" class="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/dl" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Download
                             </a>
-                            <a href="/sort" class="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/sort" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Sort Files
                             </a>
-                            <a href="/transcribe" class="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/transcribe" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Transcribe
                             </a>
-                            <a href="/console" class="border-green-500 text-green-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/console" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Console
                             </a>
                         </div>
@@ -70,44 +53,21 @@
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div class="px-4 py-6 sm:px-0">
-                <div class="bg-gray-800 rounded-lg shadow p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-medium text-white">Download Console</h2>
-                        <div class="flex space-x-2">
-                            <button id="clearBtn" class="inline-flex items-center px-3 py-2 border border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                                Clear
-                            </button>
-                            <button id="autoScrollBtn" class="inline-flex items-center px-3 py-2 border border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-green-400 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                </svg>
-                                Auto-scroll: ON
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Console Output -->
-                    <div class="console-container h-96 overflow-y-auto">
-                        <div id="consoleOutput" class="console-text">
-                            <div class="console-line info">
-                                [Console] Ready for download operations...
-                            </div>
-                            <div class="console-line info">
-                                [Console] Start a download to see real-time progress
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-2xl font-bold text-gray-900">System Console</h2>
+                            <div class="flex space-x-2">
+                                <button id="clearBtn" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Clear</button>
+                                <button id="copyBtn" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700">Copy</button>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Status Bar -->
-                    <div class="mt-4 flex justify-between items-center text-sm text-gray-400">
-                        <div>
-                            <span id="lineCount">0</span> lines
-                        </div>
-                        <div>
-                            <span id="status">Ready</span>
+                    <div class="bg-gray-900 rounded-b-lg">
+                        <div id="consoleOutput" class="p-4 text-xs font-mono text-green-400 h-96 overflow-y-auto">
+                            <div>[Console] System console initialized...</div>
+                            <div>[Console] Ready for operations...</div>
                         </div>
                     </div>
                 </div>
@@ -116,112 +76,62 @@
     </div>
 
     <script>
-        let autoScroll = true;
-        let lineCount = 0;
         let eventSource = null;
-
+        
         document.addEventListener('DOMContentLoaded', function() {
-            const clearBtn = document.getElementById('clearBtn');
-            const autoScrollBtn = document.getElementById('autoScrollBtn');
-            const consoleOutput = document.getElementById('consoleOutput');
-            const lineCountSpan = document.getElementById('lineCount');
-            const statusSpan = document.getElementById('status');
-
-            // Clear console
-            clearBtn.addEventListener('click', function() {
-                consoleOutput.innerHTML = '';
-                lineCount = 0;
-                lineCountSpan.textContent = lineCount;
-                addConsoleLine('[Console] Console cleared', 'info');
-            });
-
-            // Toggle auto-scroll
-            autoScrollBtn.addEventListener('click', function() {
-                autoScroll = !autoScroll;
-                const icon = autoScrollBtn.querySelector('svg');
-                const text = autoScrollBtn.querySelector('span') || autoScrollBtn.childNodes[autoScrollBtn.childNodes.length - 1];
-                
-                if (autoScroll) {
-                    autoScrollBtn.className = autoScrollBtn.className.replace('text-gray-400', 'text-green-400');
-                    text.textContent = 'Auto-scroll: ON';
-                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>';
-                } else {
-                    autoScrollBtn.className = autoScrollBtn.className.replace('text-green-400', 'text-gray-400');
-                    text.textContent = 'Auto-scroll: OFF';
-                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>';
-                }
-            });
-
-            // Start console stream
             startConsoleStream();
+            
+            // Clear button
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                document.getElementById('consoleOutput').innerHTML = '<div>[Console] Console cleared...</div>';
+            });
+            
+            // Copy button
+            document.getElementById('copyBtn').addEventListener('click', function() {
+                const consoleText = document.getElementById('consoleOutput').textContent;
+                navigator.clipboard.writeText(consoleText).then(function() {
+                    alert('Console output copied to clipboard!');
+                });
+            });
+        });
 
-            function startConsoleStream() {
-                if (eventSource) {
-                    eventSource.close();
-                }
-
-                eventSource = new EventSource('/console/stream');
-                
-                eventSource.onmessage = function(event) {
-                    const line = event.data;
-                    addConsoleLine(line);
-                };
-
-                eventSource.onerror = function(event) {
-                    console.error('Console stream error:', event);
-                    statusSpan.textContent = 'Connection error';
-                    // Try to reconnect after 5 seconds
-                    setTimeout(startConsoleStream, 5000);
-                };
-
-                eventSource.onopen = function(event) {
-                    statusSpan.textContent = 'Connected';
-                };
+        function startConsoleStream() {
+            if (eventSource) {
+                eventSource.close();
             }
 
-            function addConsoleLine(text, type = 'default') {
-                const line = document.createElement('div');
-                line.className = `console-line ${type}`;
-                line.textContent = text;
-                
-                consoleOutput.appendChild(line);
-                lineCount++;
-                lineCountSpan.textContent = lineCount;
+            eventSource = new EventSource('/console/stream');
+            
+            eventSource.onmessage = function(event) {
+                const line = event.data;
+                addConsoleLine(line);
+            };
 
-                // Auto-scroll to bottom
-                if (autoScroll) {
-                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
-                }
+            eventSource.onerror = function(event) {
+                console.error('Console stream error:', event);
+            };
+        }
 
-                // Limit lines to prevent memory issues
-                if (lineCount > 1000) {
-                    const firstLine = consoleOutput.firstChild;
-                    if (firstLine) {
-                        consoleOutput.removeChild(firstLine);
-                        lineCount--;
-                        lineCountSpan.textContent = lineCount;
-                    }
-                }
+        function addConsoleLine(text) {
+            const line = document.createElement('div');
+            line.textContent = text;
+            const consoleOutput = document.getElementById('consoleOutput');
+            consoleOutput.appendChild(line);
+            
+            // Auto-scroll to bottom
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            
+            // Limit lines to prevent memory issues
+            if (consoleOutput.children.length > 1000) {
+                consoleOutput.removeChild(consoleOutput.firstChild);
             }
+        }
 
-            // Handle page visibility change
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    if (eventSource) {
-                        eventSource.close();
-                    }
-                    statusSpan.textContent = 'Paused';
-                } else {
-                    startConsoleStream();
-                }
-            });
-
-            // Handle page unload
-            window.addEventListener('beforeunload', function() {
-                if (eventSource) {
-                    eventSource.close();
-                }
-            });
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
         });
     </script>
 </body>

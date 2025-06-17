@@ -1,4 +1,4 @@
-# Jeff The Temp - Multi-Platform Video Downloader
+# Jenna The Temp - Multi-Platform Video Downloader
 
 A Flask-based web application for downloading and processing videos from multiple platforms including YouTube, TikTok, Instagram, and Facebook. Features include video downloading, audio transcription using OpenAI Whisper, and translation capabilities.
 
@@ -23,7 +23,7 @@ The application provides three main interfaces:
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd jeff-the-temp
+cd jenna-the-temp
 ```
 
 2. **Install dependencies**
@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 4. **Run the application**
 ```bash
-python heyjeff.py
+python heynjenna.py
 ```
 
 5. **Access the web interface**
@@ -111,47 +111,33 @@ Examples:
 
 ## API Endpoints
 
-- `POST /download` - Download videos from URLs
-- `GET /api/files` - Get list of downloaded files
-- `POST /transcribe_file` - Transcribe a specific file
-- `POST /translate` - Translate text
-- `POST /rename` - Rename a file
-- `POST /delete` - Delete a file
+- `POST /process` - Process video URLs
+- `GET /file/<filename>` - Download files
+- `POST /edit` - Transcribe uploaded files
+- `POST /save_transcript` - Save transcripts
 
 ## Development
 
 The project structure:
 ```
-jeff-the-temp/
-├── heyjeff.py              # Main Flask application
-├── requirements.txt        # Python dependencies
-├── templates/             # HTML templates
-│   ├── dl.html           # Download page
-│   ├── sort.html         # File management
-│   ├── transcribe.html   # Transcription interface
-│   └── console.html      # Debug console
-├── downloads/            # Downloaded files (created automatically)
-├── subtitles/           # Transcripts (created automatically)
-└── *.txt                # Cookie files (optional)
+jenna-the-temp/
+├── heynjenna.py              # Main Flask application
+├── config.py                 # Configuration settings
+├── requirements.txt          # Python dependencies
+├── README.md                # This file
+├── downloads/               # Downloaded video files
+├── subtitles/               # Generated transcripts
+├── templates/               # HTML templates
+│   ├── index.html          # Main application interface
+│   ├── dl.html             # Download page
+│   ├── sort.html           # File management page
+│   └── transcribe.html     # Transcription page
+└── SVG/                    # SVG icons and logo
+    ├── jenna.svg           # Main logo
+    ├── download.svg        # Download icon
+    ├── transcribe.svg      # Transcribe icon
+    └── sort.svg            # Sort icon
 ```
-
-## License
-
-This project is open source. Feel free to modify and distribute.
-
-## Troubleshooting
-
-**Common Issues:**
-
-1. **FFmpeg not found**: Make sure FFmpeg is installed and in your PATH
-2. **Download fails**: Check if the video is available and not private
-3. **Transcription slow**: Whisper processing is CPU-intensive, be patient
-4. **Cookie issues**: Make sure cookie files are in the correct format
-
-**Getting Help:**
-- Check the browser console for JavaScript errors
-- Look at the Flask console output for server errors
-- Ensure all dependencies are properly installed
 
 ## Contributing
 
@@ -161,6 +147,13 @@ This project is open source. Feel free to modify and distribute.
 4. Test thoroughly
 5. Submit a pull request
 
----
+## License
 
-**Note**: This tool is for personal use and educational purposes. Respect the terms of service of the platforms you're downloading from.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- **yt-dlp** for video downloading capabilities
+- **OpenAI Whisper** for audio transcription
+- **Flask** for the web framework
+- **Tailwind CSS** for styling

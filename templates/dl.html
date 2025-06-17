@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Platform Video Downloader</title>
+    <title>Jenna The Temp - Video Download</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    
+    <!-- Manrope Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
+        body { font-family: 'Manrope', sans-serif; }
         .rainbow-bar {
             background: linear-gradient(270deg, #ff0080, #7928ca, #007cf0, #00dfd8, #ff0080);
             background-size: 1200% 1200%;
@@ -19,6 +27,7 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-50">
     <div class="min-h-screen">
         <!-- Navigation -->
@@ -27,7 +36,10 @@
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <div class="flex-shrink-0 flex items-center">
-                            <h1 class="text-xl font-bold text-gray-900">Jeff The Temp</h1>
+                            <div class="flex items-center">
+                                <img src="/static/SVG/jenna.svg" alt="Jenna" class="w-8 h-8 mr-3">
+                                <h1 class="text-xl font-bold text-gray-900">Jenna The Temp</h1>
+                            </div>
                         </div>
                         <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                             <a href="/dl" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
@@ -38,9 +50,6 @@
                             </a>
                             <a href="/transcribe" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 Transcribe
-                            </a>
-                            <a href="/console" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                Console
                             </a>
                         </div>
                     </div>
@@ -71,7 +80,7 @@ https://www.tiktok.com/@user/video/...
 https://www.instagram.com/p/..."></textarea>
                                 <p class="mt-1 text-sm text-gray-500">Supported: YouTube, TikTok, Instagram, Facebook</p>
                             </div>
-
+                            
                             <!-- Options -->
                             <div class="mb-6 space-y-4">
                                 <div class="flex items-center">
@@ -122,7 +131,7 @@ https://www.instagram.com/p/..."></textarea>
                             </div>
                         </div>
                     </div>
-
+                    
                     <!-- Console Preview -->
                     <div class="lg:col-span-1">
                         <div class="bg-white rounded-lg shadow p-6">
@@ -148,7 +157,6 @@ https://www.instagram.com/p/..."></textarea>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const downloadBtn = document.getElementById('downloadBtn');
@@ -202,12 +210,12 @@ https://www.instagram.com/p/..."></textarea>
                 const links = linksTextarea.value.split('\n')
                     .map(link => link.trim())
                     .filter(link => link.length > 0);
-
+                
                 if (links.length === 0) {
                     showStatus('Please enter at least one link', 'error');
                     return;
                 }
-
+                
                 if (links.length > 10) {
                     showStatus('Maximum 10 links allowed', 'error');
                     return;
@@ -226,7 +234,7 @@ https://www.instagram.com/p/..."></textarea>
                     transcribe: transcribeCheckbox.checked,
                     mp3: mp3Checkbox.checked
                 };
-
+                
                 try {
                     // Fetch and update progress as each link is processed
                     const response = await fetch('/download', {

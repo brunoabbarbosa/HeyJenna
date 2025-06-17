@@ -1,5 +1,5 @@
 """
-Configuration file for Jeff The Temp - Multi-Platform Video Downloader
+Configuration file for Jenna The Temp - Multi-Platform Video Downloader
 """
 
 import os
@@ -8,8 +8,8 @@ class Config:
     """Base configuration"""
     
     # Flask settings
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'jeff-the-temp-secret-key-change-in-production'
-    DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'jenna-the-temp-secret-key-change-in-production'
+    DEBUG = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
     HOST = os.environ.get('FLASK_HOST', '0.0.0.0')
     PORT = int(os.environ.get('FLASK_PORT', 5000))
     
@@ -28,19 +28,20 @@ class Config:
     
     # Video quality settings
     VIDEO_QUALITY = os.environ.get('VIDEO_QUALITY', 'best[height<=1080]')
-    AUDIO_QUALITY = os.environ.get('AUDIO_QUALITY', 'bestaudio')
+    AUDIO_QUALITY = os.environ.get('AUDIO_QUALITY', 'bestaudio[ext=m4a]')
     
     # Cookie files mapping
     COOKIE_FILES = {
-        'tiktok.com': 'www.tiktok.com_cookies.txt',
         'youtube.com': 'www.youtube.com_cookies.txt',
         'youtu.be': 'www.youtube.com_cookies.txt',
+        'tiktok.com': 'www.tiktok.com_cookies.txt',
         'instagram.com': 'www.instagram.com_cookies.txt',
+        'facebook.com': 'www.facebook.com_cookies.txt',
         'fb.watch': 'www.facebook.com_cookies.txt'
     }
     
     # User agent for downloads
-    USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    USER_AGENT = os.environ.get('USER_AGENT', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
     
     # Supported platforms
     SUPPORTED_PLATFORMS = [
