@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager - Video Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    <style>
+        .video-preview {
+            width: 100%;
+            height: 320px;
+            object-fit: contain;
+            background: #111;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        .fullscreen-video {
+            position: fixed !important;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999;
+            background: #000;
+            object-fit: contain !important;
+        }
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            z-index: 9998;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <h1 class="text-xl font-bold text-gray-900">Jeff The Temp</h1>
+                        </div>
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <a href="/dl" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Download
+                            </a>
+                            <a href="/sort" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Sort Files
+                            </a>
+                            <a href="/transcribe" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Transcribe
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">File Manager</h2>
+                        <div class="flex space-x-2">
+                            <button id="refreshBtn" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Refresh
+                            </button>
+                            <select id="sortSelect" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <option value="date">Sort by Date</option>
+                                <option value="name">Sort by Name</option>
+                                <option value="size">Sort by Size</option>
+                                <option value="type">Sort by Type</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- File Gallery -->
+                    <div id="fileGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {% for file in files %}
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                                <!-- Video Preview -->
+                                {% if file.endswith(('.mp4', '.webm', '.mkv')) %}
+                                    <div class="relative">
+                                        <video class="video-preview" controls preload="metadata" data-filename="{{ file }}">
+                                            <source src="/downloads/{{ file }}" type="video/mp4">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                        <button onclick="fullscreenVideo(this)" class="absolute top-2 left-2 bg-black bg-opacity-60 text-white rounded px-2 py-1 text-xs hover:bg-opacity-80 z-10">
+                                            Fullscreen
+                                        </button>
+                                        <div class="absolute top-2 right-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Video
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% elif file.endswith('.mp3') %}
+                                    <div class="h-48 bg-gradient-to-br from-purple-400 to-pink-400 rounded-t-lg flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.794L4.383 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.383l4.617-3.794a1 1 0 011.383.07zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <div class="absolute top-2 right-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                Audio
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="h-48 bg-gradient-to-br from-gray-400 to-gray-600 rounded-t-lg flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <div class="absolute top-2 right-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                File
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- File Info -->
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <input type="text" 
+                                               value="{{ file }}" 
+                                               class="filename-input block w-full text-sm font-medium text-gray-900 bg-transparent border-0 focus:ring-0 focus:outline-none"
+                                               data-original="{{ file }}">
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                        <span>{{ "%.1f"|format(files|length) }} files</span>
+                                        <span>{{ file.split('.')[-1].upper() }}</span>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="flex space-x-2">
+                                        <a href="/downloads/{{ file }}" 
+                                           class="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Download
+                                        </a>
+                                        <button onclick="deleteFile('{{ file }}')" 
+                                                class="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Empty State -->
+                    {% if not files %}
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No files</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by downloading some videos.</p>
+                            <div class="mt-6">
+                                <a href="/dl" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Download Videos
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const sortSelect = document.getElementById('sortSelect');
+            const fileGallery = document.getElementById('fileGallery');
+
+            // Refresh functionality
+            refreshBtn.addEventListener('click', function() {
+                location.reload();
+            });
+
+            // Sort functionality
+            sortSelect.addEventListener('change', function() {
+                const sortBy = this.value;
+                const files = Array.from(fileGallery.children);
+                
+                files.sort((a, b) => {
+                    const aName = a.querySelector('.filename-input').value;
+                    const bName = b.querySelector('.filename-input').value;
+                    
+                    switch(sortBy) {
+                        case 'name':
+                            return aName.localeCompare(bName);
+                        case 'date':
+                            // Files are already sorted by date from server
+                            return 0;
+                        case 'size':
+                            // Would need file size data from server
+                            return 0;
+                        case 'type':
+                            const aExt = aName.split('.').pop();
+                            const bExt = bName.split('.').pop();
+                            return aExt.localeCompare(bExt);
+                        default:
+                            return 0;
+                    }
+                });
+                
+                // Reorder DOM elements
+                files.forEach(file => fileGallery.appendChild(file));
+            });
+
+            // Inline rename functionality
+            document.querySelectorAll('.filename-input').forEach(input => {
+                input.addEventListener('blur', function() {
+                    const newName = this.value.trim();
+                    const originalName = this.dataset.original;
+                    
+                    if (newName && newName !== originalName) {
+                        renameFile(originalName, newName);
+                    } else {
+                        this.value = originalName;
+                    }
+                });
+                
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        this.blur();
+                    }
+                });
+            });
+        });
+
+        async function renameFile(oldName, newName) {
+            try {
+                const formData = new FormData();
+                formData.append('old', oldName);
+                formData.append('new', newName);
+                
+                const response = await fetch('/rename', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update the input's original value
+                    const input = document.querySelector(`[data-original="${oldName}"]`);
+                    if (input) {
+                        input.dataset.original = newName;
+                    }
+                    showNotification('File renamed successfully', 'success');
+                } else {
+                    showNotification('Failed to rename file: ' + result.error, 'error');
+                    // Revert the input value
+                    const input = document.querySelector(`[data-original="${oldName}"]`);
+                    if (input) {
+                        input.value = oldName;
+                    }
+                }
+            } catch (error) {
+                showNotification('Error renaming file: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteFile(filename) {
+            if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('target', filename);
+                
+                const response = await fetch('/delete', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Remove the file element from the gallery
+                    const fileElement = document.querySelector(`[data-original="${filename}"]`).closest('.bg-white.border');
+                    fileElement.remove();
+                    showNotification('File deleted successfully', 'success');
+                } else {
+                    showNotification('Failed to delete file: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Error deleting file: ' + error.message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Fullscreen video logic
+        function fullscreenVideo(btn) {
+            const video = btn.parentElement.querySelector('video');
+            if (!video) return;
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'fullscreen-overlay';
+            overlay.onclick = () => {
+                document.exitFullscreen?.();
+                overlay.remove();
+                video.classList.remove('fullscreen-video');
+                video.controls = true;
+            };
+            document.body.appendChild(overlay);
+            // Make video fullscreen
+            video.classList.add('fullscreen-video');
+            video.controls = true;
+            video.play();
+            // Try native fullscreen
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            }
+        }
+    </script>
+</body>
+</html> 

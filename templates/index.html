@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video & Audio Tool - Multi-Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Flowbite -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-800">
+    <!-- Navigation -->
+    <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+        <div class="px-3 py-3 lg:px-5 lg:pl-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center justify-start">
+                    <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                        <span class="sr-only">Open sidebar</span>
+                        <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
+                        </svg>
+                    </button>
+                    <a href="/" class="flex ml-2 md:mr-24">
+                        <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Multi-Platform Video Tool</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" aria-label="Sidebar">
+        <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
+            <ul class="space-y-2 font-medium">
+                <li>
+                    <a href="#" onclick="showTab('download')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
+                            <path d="M12.356 5.435 1.88 15.213a.5.5 0 0 0 .7.7l10.476-9.778a.5.5 0 0 0 0-.7.5.5 0 0 0-.7 0Z"/>
+                            <path d="M12.356 7.207 1.88 16.985a.5.5 0 0 0 .7.7l10.476-9.778a.5.5 0 0 0 0-.7.5.5 0 0 0-.7 0Z"/>
+                            <path d="M12.356 8.98 1.88 18.758a.5.5 0 0 0 .7.7l10.476-9.778a.5.5 0 0 0 0-.7.5.5 0 0 0-.7 0Z"/>
+                        </svg>
+                        <span class="ml-3">Video Download</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showTab('transcribe')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
+                            <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z"/>
+                        </svg>
+                        <span class="ml-3">Transcribe</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showTab('files')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="m17.414 2.586a2 2 0 0 0-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 0 0 0-2.828Z"/>
+                            <path d="M2 6a2 2 0 0 1 2-2h4v2H4v10h10V12h2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Z"/>
+                        </svg>
+                        <span class="ml-3">Files</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="pt-4 mt-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Downloaded Files</h3>
+                <div class="max-h-64 overflow-y-auto">
+                    {% for file in files %}
+                        <div class="flex items-center p-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                            </svg>
+                            <a href="/file/{{ file }}" class="truncate hover:text-blue-600">{{ file }}</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="p-4 sm:ml-64 pt-20">
+        <!-- Video Download Tab -->
+        <div id="download-tab" class="tab-content">
+            <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Multi-Platform Video Download</h3>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="linkInput" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Paste Video Links</label>
+                    <textarea id="linkInput" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Paste links from TikTok, YouTube, Instagram, or Facebook (one per line)"></textarea>
+                    <button id="processButton" type="button" class="mt-3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Process Links</button>
+                </div>
+                
+                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
+                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Supported Platforms:</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">TikTok</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">YouTube</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">Instagram</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Facebook</span>
+                    </div>
+                </div>
+                
+                <div id="tiktok-status" class="mb-6"></div>
+                
+                <div id="preview-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for file in files %}
+                        {% if file.endswith('.mp4') or file.endswith('.webm') or file.endswith('.mkv') %}
+                            <div class="bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+                                <video controls class="w-full h-48 object-cover rounded-t-lg">
+                                    <source src="/file/{{ file }}" type="video/mp4">
+                                </video>
+                                <div class="p-4">
+                                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ file }}</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <a href="/file/{{ file }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Download
+                                        </a>
+                                        {% if file.replace('.mp4', '.txt') in files or file.replace('.webm', '.txt') in files or file.replace('.mkv', '.txt') in files %}
+                                            <a href="/file/{{ file.replace('.mp4', '.txt').replace('.webm', '.txt').replace('.mkv', '.txt') }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
+                                                Transcript
+                                            </a>
+                                        {% endif %}
+                                        {% if file.replace('.mp4', '_translated.txt') in files or file.replace('.webm', '_translated.txt') in files or file.replace('.mkv', '_translated.txt') in files %}
+                                            <a href="/file/{{ file.replace('.mp4', '_translated.txt').replace('.webm', '_translated.txt').replace('.mkv', '_translated.txt') }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
+                                                Translation
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Transcribe Tab -->
+        <div id="transcribe-tab" class="tab-content hidden">
+            <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Transcribe Audio</h3>
+                </div>
+                
+                <form action="/edit" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file">Upload Audio/Video File</label>
+                        <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file" name="file" type="file" required>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Original Language</label>
+                            <input type="text" name="src_lang" placeholder="e.g. en or pt" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Translate to</label>
+                            <input type="text" name="target_lang" placeholder="leave blank to skip translation" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Transcribe</button>
+                </form>
+                
+                {% if transcription %}
+                    <div class="mt-6">
+                        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Transcript</h4>
+                        <form method="POST" action="/save_transcript">
+                            <textarea name="text" rows="8" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">{{ transcription }}</textarea>
+                            <input type="hidden" name="filename" value="{{ filename }}">
+                            <button type="submit" class="mt-3 text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">Save Transcript</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Files Tab -->
+        <div id="files-tab" class="tab-content hidden">
+            <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">All Files</h3>
+                </div>
+                
+                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Filename</th>
+                                <th scope="col" class="px-6 py-3">Type</th>
+                                <th scope="col" class="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in files %}
+                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ file }}</td>
+                                    <td class="px-6 py-4">
+                                        {% if file.endswith('.mp4') or file.endswith('.webm') or file.endswith('.mkv') %}
+                                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Video</span>
+                                        {% elif file.endswith('.txt') %}
+                                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Text</span>
+                                        {% else %}
+                                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Other</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <a href="/file/{{ file }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Download</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flowbite JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    
+    <script>
+        // Supported platforms
+        const SUPPORTED_PLATFORMS = [
+            'tiktok.com',
+            'youtube.com',
+            'youtu.be',
+            'instagram.com',
+            'fb.watch'
+        ];
+
+        function isSupportedPlatform(url) {
+            return SUPPORTED_PLATFORMS.some(platform => url.toLowerCase().includes(platform));
+        }
+
+        function getPlatformName(url) {
+            if (url.includes('tiktok.com')) return 'TikTok';
+            if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+            if (url.includes('instagram.com')) return 'Instagram';
+            if (url.includes('fb.watch')) return 'Facebook';
+            return 'Unknown';
+        }
+
+        // Show download tab by default and set up event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            showTab('download');
+            console.log('Page loaded, download tab shown');
+            
+            // Set up the process button event listener
+            const processButton = document.getElementById('processButton');
+            if (processButton) {
+                processButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Button clicked, calling processLinks');
+                    processLinks();
+                });
+                console.log('Process button event listener added');
+            } else {
+                console.error('Process button not found');
+            }
+            
+            // Set up paste event listener
+            const linkInput = document.getElementById('linkInput');
+            if (linkInput) {
+                linkInput.addEventListener('paste', (e) => {
+                    const text = e.clipboardData.getData('text');
+                    if (isSupportedPlatform(text) && !text.includes('\n')) {
+                        e.preventDefault();
+                        document.getElementById('linkInput').value = text;
+                        console.log('Pasted supported link, auto-processing');
+                        processLinks();
+                    }
+                });
+                console.log('Paste event listener added');
+            }
+        });
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            console.log('Switched to tab:', tabName);
+        }
+
+        async function processLinks() {
+            console.log('processLinks function called');
+            
+            const linkInput = document.getElementById('linkInput');
+            const statusDiv = document.getElementById('tiktok-status');
+            
+            if (!linkInput || !statusDiv) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            const links = linkInput.value.split('\n').filter(link => link.trim() !== '');
+            console.log('Links to process:', links);
+            
+            if (links.length === 0) {
+                statusDiv.innerHTML = '<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">Please enter at least one video link</div>';
+                console.log('No links provided');
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">Processing links...</div>';
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const link of links) {
+                console.log('Processing link:', link);
+                
+                if (isSupportedPlatform(link)) {
+                    try {
+                        console.log('Sending request for:', link);
+                        const res = await fetch('/process', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: link.trim() })
+                        });
+                        
+                        console.log('Response status:', res.status);
+                        
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        
+                        const data = await res.json();
+                        console.log('Response data:', data);
+                        
+                        if (data.error) {
+                            errorCount++;
+                            statusDiv.innerHTML += `<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">Error processing ${getPlatformName(link)} link: ${data.error}</div>`;
+                            console.error('Processing error:', data.error);
+                        } else {
+                            successCount++;
+                            statusDiv.innerHTML += `<div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">Successfully processed ${getPlatformName(link)} video: ${data.title || 'Unknown title'}</div>`;
+                            console.log('Successfully processed:', link);
+                        }
+                    } catch (error) {
+                        errorCount++;
+                        statusDiv.innerHTML += `<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">Error processing ${getPlatformName(link)} link: ${error.message}</div>`;
+                        console.error('Fetch error:', error);
+                    }
+                } else {
+                    errorCount++;
+                    statusDiv.innerHTML += `<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">Unsupported platform: ${link}</div>`;
+                    console.log('Unsupported platform:', link);
+                }
+            }
+
+            statusDiv.innerHTML += `<div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">Processing complete: ${successCount} successful, ${errorCount} failed. Refresh the page to see new videos.</div>`;
+            console.log('Processing complete:', { successCount, errorCount });
+        }
+    </script>
+</body>
+</html> 

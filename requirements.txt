@@ -1,0 +1,5 @@
+flask
+yt-dlp
+openai-whisper
+ffmpeg-python
+googletrans==4.0.0-rc1
