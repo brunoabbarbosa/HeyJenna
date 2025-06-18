@@ -228,7 +228,7 @@ def download():
 
 @app.route('/downloads/<path:filename>')
 def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 @app.route('/subtitles/<path:filename>')
 def subtitle_file(filename):
