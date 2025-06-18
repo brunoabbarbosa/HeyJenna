@@ -155,8 +155,18 @@ def download():
                 uploader = meta.get('uploader', 'unknown')
                 
                 log_to_console(f"Downloading: {title} from {extractor_key}")
-                # Download the file
-                ydl.download([url])
+                # Download the file with fallback if format is unavailable
+                try:
+                    ydl.download([url])
+                except yt_dlp.utils.DownloadError as e:
+                    if 'requested format' in str(e).lower() and 'available' in str(e).lower():
+                        log_to_console("Format not available, retrying with 'best'")
+                        retry_opts = ydl_opts.copy()
+                        retry_opts['format'] = 'best'
+                        with yt_dlp.YoutubeDL(retry_opts) as retry_ydl:
+                            retry_ydl.download([url])
+                    else:
+                        raise
                 
                 # Find the downloaded file
                 downloaded_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.startswith(uid)]
