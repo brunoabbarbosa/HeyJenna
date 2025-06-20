@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jenna The Temp - Console</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Manrope Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/jenna.svg" alt="Jenna" class="w-8 h-8 mr-3">
+                                <h1 class="text-xl font-bold text-gray-900">Jenna The Temp</h1>
+                            </div>
+                        </div>
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <a href="/dl" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Download
+                            </a>
+                            <a href="/sort" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Sort Files
+                            </a>
+                            <a href="/transcribe" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Transcribe
+                            </a>
+                            <a href="/console" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Console
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-2xl font-bold text-gray-900">System Console</h2>
+                            <div class="flex space-x-2">
+                                <button id="clearBtn" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">Clear</button>
+                                <button id="copyBtn" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-900 rounded-b-lg">
+                        <div id="consoleOutput" class="p-4 text-xs font-mono text-green-400 h-96 overflow-y-auto">
+                            <div>[Console] System console initialized...</div>
+                            <div>[Console] Ready for operations...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            startConsoleStream();
+            
+            // Clear button
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                document.getElementById('consoleOutput').innerHTML = '<div>[Console] Console cleared...</div>';
+            });
+            
+            // Copy button
+            document.getElementById('copyBtn').addEventListener('click', function() {
+                const consoleText = document.getElementById('consoleOutput').textContent;
+                navigator.clipboard.writeText(consoleText).then(function() {
+                    alert('Console output copied to clipboard!');
+                });
+            });
+        });
+
+        function startConsoleStream() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            eventSource = new EventSource('/console/stream');
+            
+            eventSource.onmessage = function(event) {
+                const line = event.data;
+                addConsoleLine(line);
+            };
+
+            eventSource.onerror = function(event) {
+                console.error('Console stream error:', event);
+            };
+        }
+
+        function addConsoleLine(text) {
+            const line = document.createElement('div');
+            line.textContent = text;
+            const consoleOutput = document.getElementById('consoleOutput');
+            consoleOutput.appendChild(line);
+            
+            // Auto-scroll to bottom
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            
+            // Limit lines to prevent memory issues
+            if (consoleOutput.children.length > 1000) {
+                consoleOutput.removeChild(consoleOutput.firstChild);
+            }
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html> 

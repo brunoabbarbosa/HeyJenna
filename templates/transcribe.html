@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeyJenna - Transcribe</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Manrope Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        .truncate-overflow {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-all;
+        }
+        .rainbow-bar {
+            background: linear-gradient(270deg, #ff0080, #7928ca, #007cf0, #00dfd8, #ff0080);
+            background-size: 1200% 1200%;
+            animation: rainbow 3s linear infinite;
+        }
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Floating Console Styles */
+        .floating-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: #1a1a1a;
+            border-top: 2px solid #333;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .floating-console.show {
+            transform: translateY(0);
+        }
+        
+        .console-header {
+            background: #2d2d2d;
+            padding: 8px 16px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .console-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+            background: #000;
+        }
+        
+        .console-line {
+            margin: 2px 0;
+            word-wrap: break-word;
+        }
+        
+        .console-toggle {
+            cursor: pointer;
+            padding: 4px 8px;
+            background: #444;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .console-toggle:hover {
+            background: #555;
+        }
+        
+        /* Mobile-specific console adjustments */
+        @media (max-width: 640px) {
+            .floating-console {
+                height: 150px;
+            }
+            
+            .console-header {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .console-content {
+                padding: 8px;
+                font-size: 10px;
+            }
+            
+            .console-toggle {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+        }
+        
+        /* Matrix Animation for Jenna SVG */
+        .jenna-svg-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .jenna-svg-container:hover {
+            transform: scale(1.05);
+        }
+        
+        .jenna-svg-container:active {
+            transform: scale(0.95);
+        }
+        
+        .matrix-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(0, 255, 0, 0.1) 25%, 
+                rgba(0, 255, 0, 0.2) 50%, 
+                rgba(0, 255, 0, 0.1) 75%, 
+                transparent 100%);
+            background-size: 200% 100%;
+            animation: matrix-scan 3s linear infinite;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .jenna-svg-container.active .matrix-overlay {
+            opacity: 1;
+            animation: matrix-scan 1s linear infinite;
+        }
+        
+        @keyframes matrix-scan {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .matrix-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .jenna-svg-container.active .matrix-particles {
+            opacity: 1;
+        }
+        
+        .matrix-particle {
+            position: absolute;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            opacity: 0;
+            animation: matrix-fall 2s linear infinite;
+        }
+        
+        @keyframes matrix-fall {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <div class="flex items-center">
+                                <div class="jenna-svg-container" onclick="toggleConsole()">
+                                    <img src="/static/SVG/jenna.svg" alt="Jenna" class="w-10 h-10 sm:w-14 sm:h-14 mr-2 sm:mr-3">
+                                    <div class="matrix-overlay"></div>
+                                    <div class="matrix-particles" id="matrixParticles"></div>
+                                </div>
+                                <h1 class="text-lg sm:text-xl font-bold text-gray-900">HeyJenna</h1>
+                            </div>
+                        </div>
+                        <!-- Desktop Navigation -->
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <a href="/dl" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/dl' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/download.svg" alt="Download" class="w-4 h-4 mr-2">
+                                Download
+                            </a>
+                            <a href="/sort" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/sort' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/sort.svg" alt="Sort" class="w-4 h-4 mr-2">
+                                Sort Files
+                            </a>
+                            <a href="/transcribe" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/transcribe' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/transcribe.svg" alt="Transcribe" class="w-4 h-4 mr-2">
+                                Transcribe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Language Switch and Mobile Menu Button -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Language Switch -->
+                        <select id="languageSelect" class="px-2 py-1 sm:px-3 sm:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            <option value="en">EN</option>
+                            <option value="pt">PT</option>
+                        </select>
+                        
+                        <!-- Mobile menu button -->
+                        <button id="mobileMenuBtn" class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                            <span class="sr-only">Open main menu</span>
+                            <!-- Icon when menu is closed -->
+                            <svg id="mobileMenuIcon" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            <!-- Icon when menu is open -->
+                            <svg id="mobileMenuCloseIcon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Mobile menu -->
+                <div id="mobileMenu" class="sm:hidden hidden">
+                    <div class="pt-2 pb-3 space-y-1 border-t border-gray-200">
+                        <a href="/dl" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/dl' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/download.svg" alt="Download" class="w-5 h-5 mr-3">
+                                Download
+                            </div>
+                        </a>
+                        <a href="/sort" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/sort' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/sort.svg" alt="Sort" class="w-5 h-5 mr-3">
+                                Sort Files
+                            </div>
+                        </a>
+                        <a href="/transcribe" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/transcribe' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/transcribe.svg" alt="Transcribe" class="w-5 h-5 mr-3">
+                                Transcribe
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Language Switch -->
+        <div class="fixed top-4 right-4">
+            <select id="languageSelect" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+            </select>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- File Selection Section -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-6">Transcribe Files</h2>
+                            
+                            <div class="mb-6">
+                                <label for="fileSelect" class="block text-sm font-medium text-gray-700 mb-2">Select a file to transcribe</label>
+                                <select id="fileSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Choose a file...</option>
+                                    {% for file in downloads %}
+                                    <option value="{{ file }}">{{ file }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <button id="transcribeBtn" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                Transcribe
+                            </button>
+                            
+                            <div id="transcribeStatus" class="mt-4"></div>
+                        </div>
+                        
+                        <!-- Available Transcripts -->
+                        <div class="bg-white rounded-lg shadow p-6 mt-6 relative">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center justify-between">
+                                <span>Available Transcripts</span>
+                                <button id="deleteSelectedTranscriptBtn" class="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded transition absolute right-4 top-4 hidden" title="Delete selected transcript">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
+                                    </svg>
+                                </button>
+                            </h3>
+                            <div class="space-y-3" id="transcriptList">
+                                {% for transcript in transcripts %}
+                                <button onclick="loadTranscript('{{ transcript }}')"
+                                    class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition transcript-btn"
+                                    title="{{ transcript }}" data-filename="{{ transcript }}">
+                                    <span class="block text-sm font-medium text-gray-900 truncate-overflow">{{ transcript }}</span>
+                                </button>
+                                {% endfor %}
+                            </div>
+                            {% if not transcripts %}
+                            <div class="text-center py-8 text-gray-500">
+                                <p>No transcripts available yet.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Transcript Display and Translation -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">Transcript & Translation</h3>
+                            </div>
+                            
+                            <!-- Original Transcript -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Original Transcript</label>
+                                <textarea id="originalText" rows="10" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Select a transcript or transcribe a file to view content..."></textarea>
+                            </div>
+                            
+                            <!-- Rainbow Progress Bar -->
+                            <div id="progressContainer" class="mb-6 hidden">
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                    <div id="rainbowBar" class="rainbow-bar h-4 rounded-full transition-all duration-500" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Translation Controls -->
+                            <div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <label class="text-sm font-medium text-gray-700">Translate to:</label>
+                                        <select id="translateLang" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                            <option value="">Choose language...</option>
+                                            <option value="es">Spanish</option>
+                                            <option value="fr">French</option>
+                                            <option value="de">German</option>
+                                            <option value="it">Italian</option>
+                                            <option value="pt">Portuguese</option>
+                                            <option value="ru">Russian</option>
+                                            <option value="ja">Japanese</option>
+                                            <option value="ko">Korean</option>
+                                            <option value="zh">Chinese</option>
+                                            <option value="ar">Arabic</option>
+                                            <option value="hi">Hindi</option>
+                                        </select>
+                                    </div>
+                                    <button id="translateBtn" class="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <svg class="w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Translate
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Translation -->
+                            <div id="translationSection" class="hidden mb-6">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">Translation</label>
+                                    <span id="translationLang" class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded"></span>
+                                </div>
+                                <textarea id="translatedText" rows="10" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm bg-green-50" placeholder="Translation will appear here..."></textarea>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                                <div class="flex space-x-2">
+                                    <button id="saveBtn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Save Original
+                                    </button>
+                                    <button id="downloadBtn" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Download Original
+                                    </button>
+                                    <button id="downloadTranslationBtn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed hidden">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Download Translation
+                                    </button>
+                                </div>
+                                
+                                <div class="text-sm text-gray-500">
+                                    <span id="charCount">0 characters</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilename = null;
+        let originalContent = '';
+        let selectedTranscript = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const transcribeBtn = document.getElementById('transcribeBtn');
+            const fileSelect = document.getElementById('fileSelect');
+            const originalText = document.getElementById('originalText');
+            const translatedText = document.getElementById('translatedText');
+            const saveBtn = document.getElementById('saveBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadTranslationBtn = document.getElementById('downloadTranslationBtn');
+            const translateBtn = document.getElementById('translateBtn');
+            const translationSection = document.getElementById('translationSection');
+
+            // Character count
+            originalText.addEventListener('input', function() {
+                updateCharCount();
+            });
+
+            // Transcribe button
+            transcribeBtn.addEventListener('click', async function() {
+                const filename = fileSelect.value;
+                const statusDiv = document.getElementById('transcribeStatus');
+                
+                if (!filename) {
+                    statusDiv.innerHTML = '<div class="text-red-600">Please select a file</div>';
+                    return;
+                }
+                
+                statusDiv.innerHTML = '<div class="text-blue-600">Transcribing...</div>';
+                transcribeBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('/transcribe_file', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `filename=${encodeURIComponent(filename)}`
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        statusDiv.innerHTML = '<div class="text-green-600">Transcription completed!</div>';
+                        originalText.value = result.content;
+                        originalText.disabled = false;
+                        originalContent = result.content;
+                        currentFilename = result.transcript;
+                        saveBtn.disabled = false;
+                        downloadBtn.disabled = false;
+                        updateCharCount();
+                        translationSection.classList.add('hidden');
+                        translatedText.value = '';
+                        downloadTranslationBtn.classList.add('hidden');
+                        showNotification('Transcription completed!', 'success');
+                    } else {
+                        statusDiv.innerHTML = `<div class="text-red-600">Error: ${result.error}</div>`;
+                    }
+                } catch (error) {
+                    statusDiv.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
+                } finally {
+                    transcribeBtn.disabled = false;
+                    hideRainbowBar();
+                }
+            });
+
+            // Make loadTranscript globally accessible
+            window.loadTranscript = async function(filename) {
+                try {
+                    const response = await fetch('/load_subtitle', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `filename=${encodeURIComponent(filename)}`
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        originalText.value = result.content;
+                        originalText.disabled = false;
+                        originalContent = result.content;
+                        currentFilename = filename;
+                        saveBtn.disabled = false;
+                        downloadBtn.disabled = false;
+                        updateCharCount();
+                        translationSection.classList.add('hidden');
+                        translatedText.value = '';
+                        downloadTranslationBtn.classList.add('hidden');
+                        showNotification(`Loaded transcript: ${filename}`, 'success');
+                        selectedTranscript = filename;
+                        // Highlight selected button
+                        document.querySelectorAll('.transcript-btn').forEach(btn => {
+                            if (btn.getAttribute('data-filename') === filename) {
+                                btn.classList.add('bg-indigo-100');
+                            } else {
+                                btn.classList.remove('bg-indigo-100');
+                            }
+                        });
+                        // Show delete button
+                        document.getElementById('deleteSelectedTranscriptBtn').classList.remove('hidden');
+                    } else {
+                        showNotification('Error: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error: ' + error.message, 'error');
+                }
+            };
+
+            // Translate button
+            translateBtn.addEventListener('click', async function() {
+                const lang = document.getElementById('translateLang').value;
+                const content = originalText.value;
+                
+                if (!lang || !content) {
+                    showNotification('Please select a language and ensure there is content to translate', 'error');
+                    return;
+                }
+                
+                try {
+                    translateBtn.disabled = true;
+                    translateBtn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path></svg>Translating...';
+                    
+                    const response = await fetch('/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `text=${encodeURIComponent(content)}&lang=${lang}`
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        translatedText.value = result.translated;
+                        translationSection.classList.remove('hidden');
+                        downloadTranslationBtn.classList.remove('hidden');
+                        const langNames = {
+                            'es': 'Spanish', 'fr': 'French', 'de': 'German', 'it': 'Italian',
+                            'pt': 'Portuguese', 'ru': 'Russian', 'ja': 'Japanese', 'ko': 'Korean',
+                            'zh': 'Chinese', 'ar': 'Arabic', 'hi': 'Hindi'
+                        };
+                        const langName = langNames[lang] || lang.toUpperCase();
+                        document.getElementById('translationLang').textContent = langName;
+                        showNotification(`Translation to ${langName} completed!`, 'success');
+                    } else {
+                        showNotification('Translation error: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error: ' + error.message, 'error');
+                } finally {
+                    translateBtn.disabled = false;
+                    translateBtn.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>Translate';
+                    hideRainbowBar();
+                }
+            });
+
+            // Save button
+            saveBtn.addEventListener('click', function() {
+                const content = originalText.value;
+                if (!currentFilename || !content.trim()) {
+                    showNotification('No transcript to save', 'error');
+                    return;
+                }
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFilename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showNotification('Transcript saved successfully', 'success');
+            });
+
+            // Download button
+            downloadBtn.addEventListener('click', function() {
+                const content = originalText.value;
+                if (!content.trim()) {
+                    showNotification('No content to download', 'error');
+                    return;
+                }
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFilename || 'transcript.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showNotification('Transcript downloaded successfully', 'success');
+            });
+
+            // Download translation button
+            downloadTranslationBtn.addEventListener('click', function() {
+                const content = translatedText.value;
+                if (!content.trim()) {
+                    showNotification('No translation to download', 'error');
+                    return;
+                }
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFilename ? `translated_${currentFilename}` : 'translation.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showNotification('Translation downloaded successfully', 'success');
+            });
+
+            function updateCharCount() {
+                const charCount = document.getElementById('charCount');
+                const count = originalText.value.length;
+                charCount.textContent = `${count} characters`;
+            }
+
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+                    type === 'success' ? 'bg-green-500 text-white' :
+                    type === 'error' ? 'bg-red-500 text-white' :
+                    'bg-blue-500 text-white'
+                }`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+
+            function showRainbowBar() {
+                document.getElementById('progressContainer').classList.remove('hidden');
+            }
+            function hideRainbowBar() {
+                document.getElementById('progressContainer').classList.add('hidden');
+            }
+
+            // Hook up to all main actions
+            ['transcribeBtn', 'translateBtn', 'saveBtn', 'downloadBtn', 'downloadTranslationBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', showRainbowBar);
+                }
+            });
+
+            function deleteTranscript() {
+                if (!selectedTranscript) return;
+                if (!confirm('Are you sure you want to delete this transcript?')) return;
+                fetch('/delete', {
+                    method: 'POST',
+                    body: new URLSearchParams({ target: selectedTranscript })
+                })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the transcript button from the UI
+                        const btn = document.querySelector('.transcript-btn.bg-indigo-100');
+                        if (btn) btn.remove();
+                        selectedTranscript = null;
+                        document.getElementById('deleteSelectedTranscriptBtn').classList.add('hidden');
+                        // Optionally clear the transcript textarea
+                        document.getElementById('originalText').value = '';
+                    } else {
+                        alert('Failed to delete transcript: ' + (data.error || 'Unknown error'));
+                    }
+                });
+            }
+
+            document.getElementById('deleteSelectedTranscriptBtn').onclick = deleteTranscript;
+
+            // Initialize matrix particles when console is activated
+            const matrixParticles = document.getElementById('matrixParticles');
+            if (matrixParticles) {
+                createMatrixParticles();
+            }
+
+            // Mobile menu functionality
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuIcon = document.getElementById('mobileMenuIcon');
+            const mobileMenuCloseIcon = document.getElementById('mobileMenuCloseIcon');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    const isHidden = mobileMenu.classList.contains('hidden');
+                    
+                    if (isHidden) {
+                        mobileMenu.classList.remove('hidden');
+                        mobileMenuIcon.classList.add('hidden');
+                        mobileMenuCloseIcon.classList.remove('hidden');
+                    } else {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuIcon.classList.remove('hidden');
+                        mobileMenuCloseIcon.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (mobileMenu && !mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                    mobileMenu.classList.add('hidden');
+                    mobileMenuIcon.classList.remove('hidden');
+                    mobileMenuCloseIcon.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+
+    <!-- Floating Console -->
+    <div id="floatingConsole" class="floating-console">
+        <div class="console-header">
+            <span>🔧 Jenna Console - Real-time Logs</span>
+            <button class="console-toggle" onclick="toggleConsole()">Hide Console</button>
+        </div>
+        <div id="consoleContent" class="console-content">
+            <div class="console-line">[Console] Initializing floating console...</div>
+            <div class="console-line">[Console] Ready to display real-time logs</div>
+        </div>
+    </div>
+
+    <script>
+        // Global toggle function for the console
+        function toggleConsole() {
+            const console = document.getElementById('floatingConsole');
+            const toggleBtn = document.querySelector('.console-toggle');
+            const jennaContainer = document.querySelector('.jenna-svg-container');
+            
+            if (console.classList.contains('show')) {
+                console.classList.remove('show');
+                toggleBtn.textContent = 'Show Console';
+                jennaContainer.classList.remove('active');
+            } else {
+                console.classList.add('show');
+                toggleBtn.textContent = 'Hide Console';
+                jennaContainer.classList.add('active');
+                // Start console stream if not already started
+                if (window.startConsoleStream) {
+                    window.startConsoleStream();
+                }
+            }
+        }
+
+        // Matrix particle effect
+        function createMatrixParticles() {
+            const particlesContainer = document.getElementById('matrixParticles');
+            if (!particlesContainer) return;
+            
+            const matrixChars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.className = 'matrix-particle';
+                particle.textContent = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                particle.style.animationDuration = (1 + Math.random() * 2) + 's';
+                
+                particlesContainer.appendChild(particle);
+                
+                // Remove particle after animation
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 3000);
+            }
+            
+            // Create particles periodically
+            setInterval(createParticle, 100);
+        }
+
+        // Floating Console functionality
+        let consoleEventSource = null;
+
+        function startConsoleStream() {
+            if (consoleEventSource) {
+                consoleEventSource.close();
+            }
+
+            consoleEventSource = new EventSource('/console/stream');
+            
+            consoleEventSource.onmessage = function(event) {
+                addConsoleLine(event.data);
+            };
+
+            consoleEventSource.onerror = function(event) {
+                console.error('Console stream error:', event);
+                // Try to reconnect after 5 seconds
+                setTimeout(() => {
+                    if (consoleEventSource) {
+                        startConsoleStream();
+                    }
+                }, 5000);
+            };
+        }
+
+        function addConsoleLine(message) {
+            const consoleContent = document.getElementById('consoleContent');
+            if (!consoleContent) return;
+
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.textContent = message;
+            consoleContent.appendChild(line);
+
+            // Auto-scroll to bottom
+            consoleContent.scrollTop = consoleContent.scrollHeight;
+
+            // Keep only last 100 lines
+            const lines = consoleContent.querySelectorAll('.console-line');
+            if (lines.length > 100) {
+                lines[0].remove();
+            }
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (consoleEventSource) {
+                consoleEventSource.close();
+            }
+        });
+    </script>
+</body>
+</html> 

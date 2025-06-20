@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeyJenna - Video Download</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Manrope Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        .rainbow-bar {
+            background: linear-gradient(270deg, #ff0080, #7928ca, #007cf0, #00dfd8, #ff0080);
+            background-size: 1200% 1200%;
+            animation: rainbow 3s linear infinite;
+        }
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Floating Console Styles */
+        .floating-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: #1a1a1a;
+            border-top: 2px solid #333;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .floating-console.show {
+            transform: translateY(0);
+        }
+        
+        .console-header {
+            background: #2d2d2d;
+            padding: 8px 16px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .console-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+            background: #000;
+        }
+        
+        .console-line {
+            margin: 2px 0;
+            word-wrap: break-word;
+        }
+        
+        .console-toggle {
+            cursor: pointer;
+            padding: 4px 8px;
+            background: #444;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .console-toggle:hover {
+            background: #555;
+        }
+        
+        /* Mobile-specific console adjustments */
+        @media (max-width: 640px) {
+            .floating-console {
+                height: 150px;
+            }
+            
+            .console-header {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .console-content {
+                padding: 8px;
+                font-size: 10px;
+            }
+            
+            .console-toggle {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+        }
+        
+        /* Matrix Animation for Jenna SVG */
+        .jenna-svg-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .jenna-svg-container:hover {
+            transform: scale(1.05);
+        }
+        
+        .jenna-svg-container:active {
+            transform: scale(0.95);
+        }
+        
+        .matrix-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(0, 255, 0, 0.1) 25%, 
+                rgba(0, 255, 0, 0.2) 50%, 
+                rgba(0, 255, 0, 0.1) 75%, 
+                transparent 100%);
+            background-size: 200% 100%;
+            animation: matrix-scan 3s linear infinite;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .jenna-svg-container.active .matrix-overlay {
+            opacity: 1;
+            animation: matrix-scan 1s linear infinite;
+        }
+        
+        @keyframes matrix-scan {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .matrix-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .jenna-svg-container.active .matrix-particles {
+            opacity: 1;
+        }
+        
+        .matrix-particle {
+            position: absolute;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            opacity: 0;
+            animation: matrix-fall 2s linear infinite;
+        }
+        
+        @keyframes matrix-fall {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <div class="flex items-center">
+                                <div class="jenna-svg-container" onclick="toggleConsole()">
+                                    <img src="/static/SVG/jenna.svg" alt="Jenna" class="w-10 h-10 sm:w-14 sm:h-14 mr-2 sm:mr-3">
+                                    <div class="matrix-overlay"></div>
+                                    <div class="matrix-particles" id="matrixParticles"></div>
+                                </div>
+                                <h1 class="text-lg sm:text-xl font-bold text-gray-900">HeyJenna</h1>
+                            </div>
+                        </div>
+                        <!-- Desktop Navigation -->
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <a href="/dl" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/dl' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/download.svg" alt="Download" class="w-4 h-4 mr-2">
+                                Download
+                            </a>
+                            <a href="/sort" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/sort' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/sort.svg" alt="Sort" class="w-4 h-4 mr-2">
+                                Sort Files
+                            </a>
+                            <a href="/transcribe" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/transcribe' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/transcribe.svg" alt="Transcribe" class="w-4 h-4 mr-2">
+                                Transcribe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Language Switch and Mobile Menu Button -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Language Switch -->
+                        <select id="languageSelect" class="px-2 py-1 sm:px-3 sm:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            <option value="en">EN</option>
+                            <option value="pt">PT</option>
+                        </select>
+                        
+                        <!-- Mobile menu button -->
+                        <button id="mobileMenuBtn" class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                            <span class="sr-only">Open main menu</span>
+                            <!-- Icon when menu is closed -->
+                            <svg id="mobileMenuIcon" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            <!-- Icon when menu is open -->
+                            <svg id="mobileMenuCloseIcon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Mobile menu -->
+                <div id="mobileMenu" class="sm:hidden hidden">
+                    <div class="pt-2 pb-3 space-y-1 border-t border-gray-200">
+                        <a href="/dl" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/dl' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/download.svg" alt="Download" class="w-5 h-5 mr-3">
+                                Download
+                            </div>
+                        </a>
+                        <a href="/sort" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/sort' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/sort.svg" alt="Sort" class="w-5 h-5 mr-3">
+                                Sort Files
+                            </div>
+                        </a>
+                        <a href="/transcribe" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/transcribe' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/transcribe.svg" alt="Transcribe" class="w-5 h-5 mr-3">
+                                Transcribe
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Download Form -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-6" data-translate="multi_platform_download">Multi-Platform Video Download</h2>
+                            
+                            <!-- Link Input -->
+                            <div class="mb-6">
+                                <label for="links" class="block text-sm font-medium text-gray-700 mb-2" data-translate="video_links">
+                                    Video Links (up to 10, one per line)
+                                </label>
+                                <textarea 
+                                    id="links" 
+                                    rows="6" 
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    placeholder="https://www.youtube.com/watch?v=...\nhttps://www.tiktok.com/@user/video/...\nhttps://www.instagram.com/p/..." data-translate="link_placeholder"></textarea>
+                                <p class="mt-1 text-sm text-gray-500" data-translate="supported_platforms">Supported: YouTube, TikTok, Instagram, Facebook</p>
+                            </div>
+                            
+                            <!-- Options -->
+                            <div class="mb-6 space-y-4">
+                                <div class="flex items-center">
+                                    <input id="transcribe" name="transcribe" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    <label for="transcribe" class="ml-2 block text-sm text-gray-900" data-translate="transcribe_audio">
+                                        Transcribe audio after download (Whisper)
+                                    </label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="mp3" name="mp3" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    <label for="mp3" class="ml-2 block text-sm text-gray-900" data-translate="download_mp3">
+                                        Download MP3 only (skip video)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Download Button -->
+                            <div class="mb-6">
+                                <button 
+                                    id="downloadBtn" 
+                                    type="button" 
+                                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-3 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed" data-translate="download_videos">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" id="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Download Videos
+                                </button>
+                            </div>
+
+                            <!-- Rainbow Progress Bar -->
+                            <div id="progressContainer" class="mb-6 hidden">
+                                <div class="flex justify-between mb-1">
+                                    <span id="progressText" class="text-sm font-medium text-indigo-700">0% (0/0)</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                    <div id="rainbowBar" class="rainbow-bar h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div id="status" class="space-y-3"></div>
+
+                            <!-- Results -->
+                            <div id="results" class="mt-8 hidden">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Download Results</h3>
+                                <div id="resultsList" class="space-y-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Detection Section -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-6" data-translate="detect_videos">Detect Videos on Any Website</h2>
+                            
+                            <!-- URL Input for Detection -->
+                            <div class="mb-6">
+                                <label for="detectUrl" class="block text-sm font-medium text-gray-700 mb-2" data-translate="website_url">
+                                    Website URL
+                                </label>
+                                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                    <input 
+                                        type="url" 
+                                        id="detectUrl" 
+                                        class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="https://example.com or just example.com" 
+                                        data-translate="detect_url_placeholder">
+                                    <button 
+                                        id="detectBtn" 
+                                        type="button" 
+                                        class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                        data-translate="detect_videos">
+                                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" id="detectSpinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Detect Videos
+                                    </button>
+                                </div>
+                                <p class="mt-1 text-sm text-gray-500" data-translate="detect_description">
+                                    Automatically find videos on any webpage using web scraping and yt-dlp
+                                </p>
+                            </div>
+
+                            <!-- Detection Results -->
+                            <div id="detectionResults" class="hidden">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="detected_videos">Detected Videos</h3>
+                                <div id="detectedVideosList" class="space-y-3"></div>
+                                
+                                <!-- Quick Download All -->
+                                <div id="quickDownloadSection" class="mt-4 hidden">
+                                    <button 
+                                        id="quickDownloadBtn" 
+                                        type="button" 
+                                        class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Download All Detected Videos
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Detection Status -->
+                            <div id="detectionStatus" class="space-y-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Console -->
+    <div id="floatingConsole" class="floating-console">
+        <div class="console-header">
+            <span>🔧 Jenna Console - Real-time Logs</span>
+            <button class="console-toggle" onclick="toggleConsole()">Hide Console</button>
+        </div>
+        <div id="consoleContent" class="console-content">
+            <div class="console-line">[Console] Initializing floating console...</div>
+            <div class="console-line">[Console] Ready to display real-time logs</div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'en';
+        const translations = {
+            'en': {
+                'home': 'Home',
+                'sort': 'Sort',
+                'transcribe': 'Transcribe',
+                'download': 'Download',
+                'about': 'About',
+                'download_files': 'Download Files',
+                'multi_platform_download': 'Multi-Platform Video Download',
+                'video_links': 'Video Links (up to 10, one per line)',
+                'link_placeholder': 'https://www.youtube.com/watch?v=...\nhttps://www.tiktok.com/@user/video/...\nhttps://www.instagram.com/p/...',
+                'supported_platforms': 'Supported: YouTube, TikTok, Instagram, Facebook',
+                'transcribe_audio': 'Transcribe audio after download (Whisper)',
+                'download_mp3': 'Download MP3 only (skip video)',
+                'download_videos': 'Download Videos',
+                'live_console': 'Live Console',
+                'view_full_console': 'View Full Console',
+                'console_preview_note': 'Real-time download progress will appear here',
+                'download_history': 'Download History',
+                'no_downloads': 'No downloads yet',
+                'download_now': 'Download Now',
+                'downloading': 'Downloading...',
+                'download_complete': 'Download Complete!',
+                'error_occurred': 'An error occurred',
+                'processing': 'Processing...',
+                'url': 'URL',
+                'enter_url': 'Enter URL',
+                'clear': 'Clear',
+                'delete': 'Delete',
+                'select_all': 'Select All',
+                'deselect_all': 'Deselect All',
+                'detect_videos': 'Detect Videos on Any Website',
+                'detect_url_placeholder': 'https://example.com or just example.com',
+                'detect_description': 'Automatically find videos on any webpage using web scraping and yt-dlp',
+                'detected_videos': 'Detected Videos',
+                'detected_videos_list': 'Detected Videos List',
+                'quick_download_section': 'Quick Download Section',
+                'quick_download_btn': 'Quick Download Button'
+            },
+            'pt': {
+                'home': 'Início',
+                'sort': 'Ordenar',
+                'transcribe': 'Transcrever',
+                'download': 'Baixar',
+                'about': 'Sobre',
+                'download_files': 'Baixar Arquivos',
+                'multi_platform_download': 'Download Multi-Plataforma de Vídeos',
+                'video_links': 'Links de Vídeo (até 10, um por linha)',
+                'link_placeholder': 'https://www.youtube.com/watch?v=...\nhttps://www.tiktok.com/@user/video/...\nhttps://www.instagram.com/p/...',
+                'supported_platforms': 'Suportado: YouTube, TikTok, Instagram, Facebook',
+                'transcribe_audio': 'Transcrever áudio após download (Whisper)',
+                'download_mp3': 'Baixar apenas MP3 (pular vídeo)',
+                'download_videos': 'Baixar Vídeos',
+                'live_console': 'Console ao Vivo',
+                'view_full_console': 'Ver Console Completo',
+                'console_preview_note': 'Progresso de download em tempo real aparecerá aqui',
+                'download_history': 'Histórico de Downloads',
+                'no_downloads': 'Nenhum download ainda',
+                'download_now': 'Baixar Agora',
+                'downloading': 'Baixando...',
+                'download_complete': 'Download Concluído!',
+                'error_occurred': 'Ocorreu um erro',
+                'processing': 'Processando...',
+                'url': 'URL',
+                'enter_url': 'Digite a URL',
+                'clear': 'Limpar',
+                'delete': 'Excluir',
+                'select_all': 'Selecionar Tudo',
+                'deselect_all': 'Desselecionar Tudo',
+                'detect_videos': 'Detectar Vídeos em Qualquer Website',
+                'detect_url_placeholder': 'https://example.com ou apenas example.com',
+                'detect_description': 'Encontre automaticamente vídeos em qualquer página da web usando raspagem de web e yt-dlp',
+                'detected_videos': 'Vídeos Detectados',
+                'detected_videos_list': 'Lista de Vídeos Detectados',
+                'quick_download_section': 'Seção de Download Rápido',
+                'quick_download_btn': 'Botão de Download Rápido'
+            }
+        };
+
+        // Global toggle function for the console
+        function toggleConsole() {
+            const console = document.getElementById('floatingConsole');
+            const toggleBtn = document.querySelector('.console-toggle');
+            const jennaContainer = document.querySelector('.jenna-svg-container');
+            
+            if (console.classList.contains('show')) {
+                console.classList.remove('show');
+                toggleBtn.textContent = 'Show Console';
+                jennaContainer.classList.remove('active');
+            } else {
+                console.classList.add('show');
+                toggleBtn.textContent = 'Hide Console';
+                jennaContainer.classList.add('active');
+                // Start console stream if not already started
+                if (window.startConsoleStream) {
+                    window.startConsoleStream();
+                }
+            }
+        }
+
+        // Matrix particle effect
+        function createMatrixParticles() {
+            const particlesContainer = document.getElementById('matrixParticles');
+            if (!particlesContainer) return;
+            
+            const matrixChars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.className = 'matrix-particle';
+                particle.textContent = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                particle.style.animationDuration = (1 + Math.random() * 2) + 's';
+                
+                particlesContainer.appendChild(particle);
+                
+                // Remove particle after animation
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 3000);
+            }
+            
+            // Create particles periodically
+            setInterval(createParticle, 100);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu functionality
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuIcon = document.getElementById('mobileMenuIcon');
+            const mobileMenuCloseIcon = document.getElementById('mobileMenuCloseIcon');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    const isHidden = mobileMenu.classList.contains('hidden');
+                    
+                    if (isHidden) {
+                        mobileMenu.classList.remove('hidden');
+                        mobileMenuIcon.classList.add('hidden');
+                        mobileMenuCloseIcon.classList.remove('hidden');
+                    } else {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuIcon.classList.remove('hidden');
+                        mobileMenuCloseIcon.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (mobileMenu && !mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                    mobileMenu.classList.add('hidden');
+                    mobileMenuIcon.classList.remove('hidden');
+                    mobileMenuCloseIcon.classList.add('hidden');
+                }
+            });
+
+            const downloadBtn = document.getElementById('downloadBtn');
+            const linksTextarea = document.getElementById('links');
+            const transcribeCheckbox = document.getElementById('transcribe');
+            const mp3Checkbox = document.getElementById('mp3');
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            const resultsList = document.getElementById('resultsList');
+            const spinner = document.getElementById('spinner');
+            const progressContainer = document.getElementById('progressContainer');
+            const rainbowBar = document.getElementById('rainbowBar');
+            const progressText = document.getElementById('progressText');
+
+            // Floating Console functionality
+            let consoleVisible = false;
+            let consoleEventSource = null;
+            
+            // Matrix effect is now handled by the SVG container onclick
+
+            function startConsoleStream() {
+                if (consoleEventSource) {
+                    consoleEventSource.close();
+                }
+
+                consoleEventSource = new EventSource('/console/stream');
+                
+                consoleEventSource.onmessage = function(event) {
+                    addConsoleLine(event.data);
+                };
+
+                consoleEventSource.onerror = function(event) {
+                    console.error('Console stream error:', event);
+                };
+            }
+
+            // Make startConsoleStream global
+            window.startConsoleStream = startConsoleStream;
+
+            // Initialize matrix particles
+            createMatrixParticles();
+
+            function addConsoleLine(text) {
+                const consoleContent = document.getElementById('consoleContent');
+                const line = document.createElement('div');
+                line.className = 'console-line';
+                line.textContent = text;
+                consoleContent.appendChild(line);
+                
+                // Auto-scroll to bottom
+                consoleContent.scrollTop = consoleContent.scrollHeight;
+                
+                // Limit lines to prevent memory issues
+                if (consoleContent.children.length > 100) {
+                    consoleContent.removeChild(consoleContent.firstChild);
+                }
+            }
+
+            // Language selection functionality
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) {
+                // Load saved language preference
+                const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+                currentLanguage = savedLanguage;
+                languageSelect.value = savedLanguage;
+                
+                // Apply translations on load
+                applyTranslations(currentLanguage);
+                
+                // Handle language change
+                languageSelect.addEventListener('change', function() {
+                    currentLanguage = this.value;
+                    localStorage.setItem('selectedLanguage', currentLanguage);
+                    applyTranslations(currentLanguage);
+                });
+            }
+
+            function applyTranslations(lang) {
+                const elements = document.querySelectorAll('[data-translate]');
+                elements.forEach(element => {
+                    const key = element.getAttribute('data-translate');
+                    if (translations[lang] && translations[lang][key]) {
+                        element.textContent = translations[lang][key];
+                    }
+                });
+            }
+
+            downloadBtn.addEventListener('click', async function() {
+                const links = linksTextarea.value.split('\n')
+                    .map(link => link.trim())
+                    .filter(link => link.length > 0);
+                
+                if (links.length === 0) {
+                    showStatus('Please enter at least one link', 'error');
+                    return;
+                }
+                
+                if (links.length > 10) {
+                    showStatus('Maximum 10 links allowed', 'error');
+                    return;
+                }
+
+                // Show loading state
+                downloadBtn.disabled = true;
+                spinner.classList.remove('hidden');
+                statusDiv.innerHTML = '';
+                resultsDiv.classList.add('hidden');
+                progressContainer.classList.remove('hidden');
+                updateProgress(0, links.length);
+
+                const data = {
+                    links: links,
+                    transcribe: transcribeCheckbox.checked,
+                    mp3: mp3Checkbox.checked
+                };
+                
+                try {
+                    // Fetch and update progress as each link is processed
+                    const response = await fetch('/download', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const results = await response.json();
+                    // Animate progress bar as results come in
+                    for (let i = 0; i < results.length; i++) {
+                        updateProgress(i + 1, results.length);
+                        await new Promise(r => setTimeout(r, 300)); // Smooth animation
+                    }
+                    // Display results
+                    displayResults(results);
+                    
+                } catch (error) {
+                    showStatus('Error: ' + error.message, 'error');
+                } finally {
+                    // Reset loading state
+                    downloadBtn.disabled = false;
+                    spinner.classList.add('hidden');
+                }
+            });
+
+            function updateProgress(done, total) {
+                const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+                rainbowBar.style.width = percent + '%';
+                progressText.textContent = `${percent}% (${done}/${total})`;
+            }
+
+            function showStatus(message, type = 'info') {
+                const colors = {
+                    'info': 'bg-blue-50 text-blue-800 border-blue-200',
+                    'success': 'bg-green-50 text-green-800 border-green-200',
+                    'error': 'bg-red-50 text-red-800 border-red-200',
+                    'warning': 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                };
+
+                const statusItem = document.createElement('div');
+                statusItem.className = `p-4 rounded-md border ${colors[type]}`;
+                statusItem.textContent = message;
+                statusDiv.appendChild(statusItem);
+            }
+
+            function displayResults(results) {
+                resultsList.innerHTML = '';
+                
+                results.forEach((result, index) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'p-4 border rounded-lg';
+                    
+                    if (result.error) {
+                        resultItem.className += ' border-red-200 bg-red-50';
+                        resultItem.innerHTML = `
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                </svg>
+                                <div>
+                                    <h4 class="font-medium text-red-800">Failed: ${result.url}</h4>
+                                    <p class="text-red-600">${result.error}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (result.status === 'already_exists') {
+                        resultItem.className += ' border-yellow-200 bg-yellow-50';
+                        resultItem.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <div>
+                                        <h4 class="font-medium text-yellow-800">${result.title || 'Unknown Title'}</h4>
+                                        <p class="text-yellow-600">${result.message}</p>
+                                        <p class="text-yellow-600">File: ${result.filename}</p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="/sort" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                        Go to Sort
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        resultItem.className += ' border-green-200 bg-green-50';
+                        resultItem.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-green-800">${result.title || 'Unknown Title'}</h4>
+                                    <p class="text-green-600">Platform: ${result.platform} | Uploader: ${result.uploader}</p>
+                                    <p class="text-green-600">File: ${result.filename}</p>
+                                    ${result.transcript ? `<p class="text-green-600">Transcript: ${result.transcript} (${result.transcript_length} chars)</p>` : ''}
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="/downloads/${result.filename}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Download
+                                    </a>
+                                    ${result.transcript ? `<a href="/subtitles/${result.transcript}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        Transcript
+                                    </a>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    resultsList.appendChild(resultItem);
+                });
+                
+                resultsDiv.classList.remove('hidden');
+                const successful = results.filter(r => !r.error && r.status !== 'already_exists').length;
+                const alreadyExists = results.filter(r => r.status === 'already_exists').length;
+                const failed = results.filter(r => r.error).length;
+                
+                let statusMessage = `Processing complete: ${successful} successful`;
+                if (alreadyExists > 0) {
+                    statusMessage += `, ${alreadyExists} already downloaded`;
+                }
+                if (failed > 0) {
+                    statusMessage += `, ${failed} failed`;
+                }
+                
+                showStatus(statusMessage, 'success');
+                updateProgress(results.length, results.length);
+            }
+
+            // Auto-process on paste if single link
+            linksTextarea.addEventListener('paste', function(e) {
+                const text = e.clipboardData.getData('text');
+                if (text.includes('http') && !text.includes('\n')) {
+                    setTimeout(() => {
+                        if (linksTextarea.value.split('\n').filter(l => l.trim()).length === 1) {
+                            downloadBtn.click();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Video Detection Functions
+            const detectBtn = document.getElementById('detectBtn');
+            const detectUrl = document.getElementById('detectUrl');
+            const detectSpinner = document.getElementById('detectSpinner');
+            const detectionResults = document.getElementById('detectionResults');
+            const detectedVideosList = document.getElementById('detectedVideosList');
+            const detectionStatus = document.getElementById('detectionStatus');
+            const quickDownloadSection = document.getElementById('quickDownloadSection');
+            const quickDownloadBtn = document.getElementById('quickDownloadBtn');
+
+            let detectedVideos = [];
+
+            // Only add event listeners if elements exist
+            if (detectBtn && detectUrl && detectSpinner && detectionResults && 
+                detectedVideosList && detectionStatus && quickDownloadSection && quickDownloadBtn) {
+                
+                detectBtn.addEventListener('click', async function() {
+                    const url = detectUrl.value.trim();
+                    
+                    if (!url) {
+                        showDetectionStatus('Please enter a website URL', 'error');
+                        return;
+                    }
+
+                    // Show loading state
+                    detectBtn.disabled = true;
+                    if (detectSpinner) detectSpinner.classList.remove('hidden');
+                    if (detectionResults) detectionResults.classList.add('hidden');
+                    if (quickDownloadSection) quickDownloadSection.classList.add('hidden');
+                    if (detectionStatus) detectionStatus.innerHTML = '';
+                    detectedVideos = [];
+
+                    showDetectionStatus('Detecting videos on webpage...', 'info');
+
+                    try {
+                        const response = await fetch('/detect_videos', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ url: url })
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            detectedVideos = result.videos || [];
+                            
+                            if (detectedVideos.length > 0) {
+                                displayDetectedVideos(detectedVideos, result.method);
+                                showDetectionStatus(`Found ${detectedVideos.length} video(s) using ${result.method}`, 'success');
+                            } else {
+                                showDetectionStatus(result.message || 'No videos detected on this page', 'warning');
+                            }
+                        } else {
+                            showDetectionStatus('Error: ' + result.error, 'error');
+                        }
+                        
+                    } catch (error) {
+                        showDetectionStatus('Error: ' + error.message, 'error');
+                    } finally {
+                        // Reset loading state
+                        detectBtn.disabled = false;
+                        if (detectSpinner) detectSpinner.classList.add('hidden');
+                    }
+                });
+
+                quickDownloadBtn.addEventListener('click', function() {
+                    if (detectedVideos.length === 0) return;
+                    
+                    // Add all detected videos to download list
+                    const urls = detectedVideos.map(video => video.url).join('\n');
+                    const currentLinks = linksTextarea.value.trim();
+                    const newLinks = currentLinks ? currentLinks + '\n' + urls : urls;
+                    linksTextarea.value = newLinks;
+                    
+                    showStatus(`Added ${detectedVideos.length} video(s) to download list`, 'success');
+                    
+                    // Scroll to download section
+                    const downloadSection = document.querySelector('.lg\\:col-span-2');
+                    if (downloadSection) {
+                        downloadSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
+
+            function showDetectionStatus(message, type = 'info') {
+                if (!detectionStatus) return;
+                
+                const colors = {
+                    'info': 'bg-blue-50 text-blue-800 border-blue-200',
+                    'success': 'bg-green-50 text-green-800 border-green-200',
+                    'error': 'bg-red-50 text-red-800 border-red-200',
+                    'warning': 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                };
+
+                const statusItem = document.createElement('div');
+                statusItem.className = `p-4 rounded-md border ${colors[type]}`;
+                statusItem.textContent = message;
+                detectionStatus.appendChild(statusItem);
+            }
+
+            function displayDetectedVideos(videos, method) {
+                if (!detectedVideosList || !detectionResults || !quickDownloadSection) return;
+                
+                detectedVideosList.innerHTML = '';
+                
+                videos.forEach((video, index) => {
+                    const videoItem = document.createElement('div');
+                    videoItem.className = 'p-4 border rounded-lg border-gray-200 bg-gray-50';
+                    
+                    const methodBadge = method === 'ytdlp_generic' ? 
+                        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">yt-dlp</span>' :
+                        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Web Scraping</span>';
+                    
+                    videoItem.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <h4 class="font-medium text-gray-900">${video.title || 'Unknown Video'}</h4>
+                                    ${methodBadge}
+                                </div>
+                                <p class="text-sm text-gray-600 mb-1">Type: ${video.type}</p>
+                                <p class="text-sm text-gray-600 mb-1">URL: <span class="font-mono text-xs">${video.url}</span></p>
+                                ${video.duration ? `<p class="text-sm text-gray-600 mb-1">Duration: ${formatDuration(video.duration)}</p>` : ''}
+                                ${video.uploader ? `<p class="text-sm text-gray-600 mb-1">Uploader: ${video.uploader}</p>` : ''}
+                            </div>
+                            <div class="flex space-x-2 ml-4">
+                                <button 
+                                    onclick="addToDownloadList('${video.url}')"
+                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add to Download
+                                </button>
+                                <a 
+                                    href="${video.url}" 
+                                    target="_blank"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                    Open
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    
+                    detectedVideosList.appendChild(videoItem);
+                });
+                
+                detectionResults.classList.remove('hidden');
+                
+                // Show quick download button if multiple videos
+                if (videos.length > 1) {
+                    quickDownloadSection.classList.remove('hidden');
+                }
+            }
+
+            function formatDuration(seconds) {
+                if (!seconds) return 'Unknown';
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                
+                if (hours > 0) {
+                    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                } else {
+                    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+                }
+            }
+
+            // Make addToDownloadList globally accessible
+            window.addToDownloadList = function(url) {
+                if (!linksTextarea) return;
+                
+                const currentLinks = linksTextarea.value.trim();
+                const newLinks = currentLinks ? currentLinks + '\n' + url : url;
+                linksTextarea.value = newLinks;
+                
+                showStatus(`Added video URL to download list: ${url}`, 'success');
+                
+                // Scroll to download section
+                const downloadSection = document.querySelector('.lg\\:col-span-2');
+                if (downloadSection) {
+                    downloadSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            };
+
+            // Handle page unload
+            window.addEventListener('beforeunload', function() {
+                if (consoleEventSource) {
+                    consoleEventSource.close();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

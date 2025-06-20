@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeyJenna - Sort Files</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Manrope Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        .video-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            background: #000;
+        }
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .fullscreen-video {
+            max-width: 90vw;
+            max-height: 90vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+        .fullscreen-video.vertical {
+            max-width: 40vw;
+            max-height: 90vh;
+        }
+        .fullscreen-video.horizontal {
+            max-width: 90vw;
+            max-height: 60vh;
+        }
+        .file-card {
+            width: 320px;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 0 auto;
+        }
+        .file-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .truncate-multiline {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            min-height: 2.5em;
+            max-height: 2.7em;
+        }
+        .convert-dropdown {
+            background: #fed7aa !important;
+            color: #222 !important;
+        }
+        .info-dropdown {
+            background: #bbf7d0 !important;
+            color: #222 !important;
+        }
+        .filename-input {
+            line-height: 1.2;
+            height: 2.7em;
+            resize: none;
+        }
+        
+        /* Floating Console Styles */
+        .floating-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: #1a1a1a;
+            border-top: 2px solid #333;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .floating-console.show {
+            transform: translateY(0);
+        }
+        
+        .console-header {
+            background: #2d2d2d;
+            padding: 8px 16px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .console-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #00ff00;
+            background: #000;
+        }
+        
+        .console-line {
+            margin: 2px 0;
+            word-wrap: break-word;
+        }
+        
+        .console-toggle {
+            cursor: pointer;
+            padding: 4px 8px;
+            background: #444;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .console-toggle:hover {
+            background: #555;
+        }
+        
+        /* Matrix Animation for Jenna SVG */
+        .jenna-svg-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .jenna-svg-container:hover {
+            transform: scale(1.05);
+        }
+        
+        .jenna-svg-container:active {
+            transform: scale(0.95);
+        }
+        
+        .matrix-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(0, 255, 0, 0.1) 25%, 
+                rgba(0, 255, 0, 0.2) 50%, 
+                rgba(0, 255, 0, 0.1) 75%, 
+                transparent 100%);
+            background-size: 200% 100%;
+            animation: matrix-scan 3s linear infinite;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .jenna-svg-container.active .matrix-overlay {
+            opacity: 1;
+            animation: matrix-scan 1s linear infinite;
+        }
+        
+        @keyframes matrix-scan {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .matrix-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .jenna-svg-container.active .matrix-particles {
+            opacity: 1;
+        }
+        
+        .matrix-particle {
+            position: absolute;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            opacity: 0;
+            animation: matrix-fall 2s linear infinite;
+        }
+        
+        @keyframes matrix-fall {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+        }
+        
+        /* Mobile-specific console adjustments */
+        @media (max-width: 640px) {
+            .floating-console {
+                height: 150px;
+            }
+            
+            .console-header {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .console-content {
+                padding: 8px;
+                font-size: 10px;
+            }
+            
+            .console-toggle {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+            
+            .file-card {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .file-actions {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <div class="flex items-center">
+                                <div class="jenna-svg-container" onclick="toggleConsole()">
+                                    <img src="/static/SVG/jenna.svg" alt="Jenna" class="w-10 h-10 sm:w-14 sm:h-14 mr-2 sm:mr-3">
+                                    <div class="matrix-overlay"></div>
+                                    <div class="matrix-particles" id="matrixParticles"></div>
+                                </div>
+                                <h1 class="text-lg sm:text-xl font-bold text-gray-900">HeyJenna</h1>
+                            </div>
+                        </div>
+                        <!-- Desktop Navigation -->
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <a href="/dl" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/dl' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/download.svg" alt="Download" class="w-4 h-4 mr-2">
+                                Download
+                            </a>
+                            <a href="/sort" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/sort' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/sort.svg" alt="Sort" class="w-4 h-4 mr-2">
+                                Sort Files
+                            </a>
+                            <a href="/transcribe" class="{{ 'border-indigo-500 text-gray-900' if request.path == '/transcribe' else 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                <img src="/static/SVG/transcribe.svg" alt="Transcribe" class="w-4 h-4 mr-2">
+                                Transcribe
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Language Switch and Mobile Menu Button -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Language Switch -->
+                        <select id="languageSelect" class="px-2 py-1 sm:px-3 sm:py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            <option value="en">EN</option>
+                            <option value="pt">PT</option>
+                        </select>
+                        
+                        <!-- Mobile menu button -->
+                        <button id="mobileMenuBtn" class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                            <span class="sr-only">Open main menu</span>
+                            <!-- Icon when menu is closed -->
+                            <svg id="mobileMenuIcon" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            <!-- Icon when menu is open -->
+                            <svg id="mobileMenuCloseIcon" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Mobile menu -->
+                <div id="mobileMenu" class="sm:hidden hidden">
+                    <div class="pt-2 pb-3 space-y-1 border-t border-gray-200">
+                        <a href="/dl" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/dl' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/download.svg" alt="Download" class="w-5 h-5 mr-3">
+                                Download
+                            </div>
+                        </a>
+                        <a href="/sort" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/sort' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/sort.svg" alt="Sort" class="w-5 h-5 mr-3">
+                                Sort Files
+                            </div>
+                        </a>
+                        <a href="/transcribe" class="{{ 'bg-indigo-50 border-indigo-500 text-indigo-700' if request.path == '/transcribe' else 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                            <div class="flex items-center">
+                                <img src="/static/SVG/transcribe.svg" alt="Transcribe" class="w-5 h-5 mr-3">
+                                Transcribe
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-2xl font-bold text-gray-900">Downloaded Files</h2>
+                            <div class="flex space-x-2">
+                                <button id="refreshBtn" class="bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700">Refresh</button>
+                                <select id="sortSelect" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                    <option value="date">Sort by Date</option>
+                                    <option value="name">Sort by Name</option>
+                                    <option value="type">Sort by Type</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- File Gallery -->
+                    <div id="fileGallery" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {% for file in files %}
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between h-[380px] w-full max-w-xs mx-auto">
+                            <!-- Video Preview -->
+                            {% if file.endswith(('.mp4', '.webm', '.mkv')) %}
+                                <div class="relative">
+                                    <video class="video-preview rounded-t-lg" controls preload="metadata" data-filename="{{ file }}">
+                                        <source src="/downloads/{{ file }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                    <button onclick="fullscreenVideo(this)" class="absolute top-2 left-2 bg-black bg-opacity-60 text-white rounded px-2 py-1 text-xs hover:bg-opacity-80 z-10">
+                                        Fullscreen
+                                    </button>
+                                    <div class="absolute top-2 right-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Video
+                                        </span>
+                                    </div>
+                                </div>
+                                <!-- Open in Explorer Button -->
+                                <div class="flex justify-center mt-2 mb-1">
+                                    <button onclick="openInExplorer('{{ file }}')" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M16 3v4H8V3"/><rect x="8" y="3" width="8" height="4" rx="1"/></svg>
+                                        Open in Explorer
+                                    </button>
+                                </div>
+                            {% elif file.endswith('.mp3') %}
+                                <div class="h-48 bg-gradient-to-br from-purple-400 to-pink-400 rounded-t-lg flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.794L4.383 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.383l4.617-3.794a1 1 0 011.383.07zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <div class="absolute top-2 right-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            Audio
+                                        </span>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="h-48 bg-gradient-to-br from-gray-400 to-gray-600 rounded-t-lg flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <div class="absolute top-2 right-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            File
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- File Info -->
+                            <div class="p-4 flex flex-col justify-between h-full">
+                                <!-- Filename and info below buttons -->
+                                <div class="mb-2">
+                                    <textarea rows="2" class="filename-input block w-full text-sm font-medium text-gray-900 bg-white rounded px-2 py-1 truncate-multiline leading-tight resize-none" data-original="{{ file }}" title="{{ file }}">{{ file }}</textarea>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                    <span>{{ file_durations[file] if file in file_durations else '' }}</span>
+                                </div>
+
+                                <!-- Action buttons directly below video, minimal gap -->
+                                <div class="flex justify-center gap-x-3 mt-1 mb-0">
+                                    <button class="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 download-btn" data-filename="{{ file }}">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
+                                    <div class="relative">
+                                        <button class="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 info-btn" data-filename="{{ file }}">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </button>
+                                        <div class="info-dropdown absolute left-0 w-56 bg-[#bbf7d0] text-gray-900 border border-green-400 rounded shadow-lg z-50 hidden p-4">
+                                            <!-- Info content will be injected here by JS -->
+                                        </div>
+                                    </div>
+                                    <div class="relative">
+                                        <button type="button" class="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 convert-btn" data-filename="{{ file }}">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path d="M17 1l4 4-4 4"/>
+                                                <path d="M3 11V9a4 4 0 014-4h14"/>
+                                                <path d="M7 23l-4-4 4-4"/>
+                                                <path d="M21 13v2a4 4 0 01-4 4H3"/>
+                                            </svg>
+                                        </button>
+                                        <div class="convert-dropdown absolute left-0 mt-2 w-44 bg-[#fed7aa] text-gray-900 border border-orange-600 rounded shadow-lg z-50 hidden">
+                                            <button class="block w-full text-left px-4 py-2 text-sm hover:bg-orange-600 hover:text-white convert-option" data-format="gif">Export as GIF (low-res)</button>
+                                            <button class="block w-full text-left px-4 py-2 text-sm hover:bg-orange-600 hover:text-white convert-option" data-format="mov">Export as MOV (highest)</button>
+                                            <button class="block w-full text-left px-4 py-2 text-sm hover:bg-orange-600 hover:text-white convert-option" data-format="mp4">Export as MP4 (compressed)</button>
+                                            <button class="block w-full text-left px-4 py-2 text-sm hover:bg-orange-600 hover:text-white convert-option" data-format="mp3">Export as MP3 (audio only)</button>
+                                        </div>
+                                    </div>
+                                    <button onclick="deleteFile('{{ file }}')" class="inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Empty State -->
+                    {% if not files %}
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No files</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by downloading some videos.</p>
+                            <div class="mt-6">
+                                <a href="/dl" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Download Videos
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const sortSelect = document.getElementById('sortSelect');
+            const fileGallery = document.getElementById('fileGallery');
+
+            // Refresh functionality
+            refreshBtn.addEventListener('click', function() {
+                location.reload();
+            });
+
+            // Sort functionality
+            sortSelect.addEventListener('change', function() {
+                const sortBy = this.value;
+                const files = Array.from(fileGallery.children);
+                
+                files.sort((a, b) => {
+                    const aName = a.querySelector('.filename-input').value;
+                    const bName = b.querySelector('.filename-input').value;
+                    
+                    switch(sortBy) {
+                        case 'name':
+                            return aName.localeCompare(bName);
+                        case 'date':
+                            // Files are already sorted by date from server
+                            return 0;
+                        case 'type':
+                            const aExt = aName.split('.').pop();
+                            const bExt = bName.split('.').pop();
+                            return aExt.localeCompare(bExt);
+                        default:
+                            return 0;
+                    }
+                });
+                
+                // Reorder DOM elements
+                files.forEach(file => fileGallery.appendChild(file));
+            });
+
+            // Inline rename functionality
+            document.querySelectorAll('.filename-input').forEach(input => {
+                input.addEventListener('blur', function() {
+                    const newName = this.value.trim();
+                    const originalName = this.dataset.original;
+                    
+                    if (newName && newName !== originalName) {
+                        renameFile(originalName, newName);
+                    } else {
+                        this.value = originalName;
+                    }
+                });
+                
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        this.blur();
+                    }
+                });
+            });
+
+            // Info dropdown logic (toggle, allow both open)
+            document.querySelectorAll('.info-btn').forEach(function(btn) {
+                var dropdown = btn.parentElement.querySelector('.info-dropdown');
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // Fetch and inject content only if opening
+                    if (dropdown.classList.contains('hidden')) {
+                        var filename = btn.getAttribute('data-filename');
+                        fetch('/api/file_info?filename=' + encodeURIComponent(filename))
+                            .then(resp => resp.json())
+                            .then(data => {
+                                if (data.success) {
+                                    dropdown.innerHTML =
+                                        '<b>Codec:</b> ' + data.codec + '<br>' +
+                                        '<b>Extension:</b> ' + data.extension + '<br>' +
+                                        '<b>Size:</b> ' + data.size + '<br>' +
+                                        '<b>Duration:</b> ' + data.duration + '<br>' +
+                                        '<b>Framerate:</b> ' + data.framerate + '<br>' +
+                                        '<button class="inline-flex justify-center items-center mt-2 px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 open-explorer-btn" data-filename="' + filename + '">' +
+                                            '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M16 3v4H8V3"/><rect x="8" y="3" width="8" height="4" rx="1"/></svg>' +
+                                            'Open in Explorer' +
+                                        '</button>';
+                                    // Attach event handler every time after setting innerHTML
+                                    var explorerBtn = dropdown.querySelector('.open-explorer-btn');
+                                    if (explorerBtn) {
+                                        explorerBtn.addEventListener('click', function(ev) {
+                                            ev.stopPropagation();
+                                            fetch('/open_in_explorer', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                                body: 'filename=' + encodeURIComponent(filename)
+                                            })
+                                            .then(resp => resp.json())
+                                            .then(data => {
+                                                if (data.success) {
+                                                    showNotification('File opened in Explorer', 'success');
+                                                } else {
+                                                    showNotification('Failed to open in Explorer: ' + (data.error || 'Unknown error'), 'error');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                showNotification('Error opening in Explorer: ' + error.message, 'error');
+                                            });
+                                        });
+                                    }
+                                } else {
+                                    dropdown.innerHTML = '<span style="color:red">Failed to get info: ' + (data.error || 'Unknown error') + '</span>';
+                                }
+                            });
+                    }
+                    dropdown.classList.toggle('hidden');
+                });
+                // Hide dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!dropdown.contains(e.target) && e.target !== btn) {
+                        dropdown.classList.add('hidden');
+                    }
+                });
+                // Prevent closing when clicking inside
+                dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+            });
+
+            var openDownloadsBtn = document.getElementById('open-downloads-folder');
+            if (openDownloadsBtn) {
+                openDownloadsBtn.addEventListener('click', function() {
+                    fetch('/open_downloads_folder', { method: 'POST' })
+                        .then(resp => resp.json())
+                        .then(data => {
+                            if (!data.success) {
+                                alert('Failed to open folder: ' + (data.error || 'Unknown error'));
+                            }
+                        });
+                });
+            }
+
+            // Convert dropdown logic (toggle, allow both open)
+            document.querySelectorAll('.convert-btn').forEach(function(btn) {
+                var dropdown = btn.parentElement.querySelector('.convert-dropdown');
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('hidden');
+                });
+                // Hide dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!dropdown.contains(e.target) && e.target !== btn) {
+                        dropdown.classList.add('hidden');
+                    }
+                });
+                // Prevent closing when clicking inside
+                dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+                // Handle option click
+                dropdown.querySelectorAll('.convert-option').forEach(function(opt) {
+                    opt.addEventListener('click', function() {
+                        dropdown.classList.add('hidden');
+                        var format = opt.getAttribute('data-format');
+                        var filename = btn.getAttribute('data-filename');
+                        // Placeholder: call backend endpoint for conversion
+                        fetch('/convert', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: 'filename=' + encodeURIComponent(filename) + '&format=' + encodeURIComponent(format)
+                        })
+                        .then(resp => resp.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Conversion started!');
+                            } else {
+                                alert('Conversion failed: ' + (data.error || 'Unknown error'));
+                            }
+                        });
+                    });
+                });
+            });
+
+            // Initialize matrix particles when console is activated
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuIcon = document.getElementById('mobileMenuIcon');
+            const mobileMenuCloseIcon = document.getElementById('mobileMenuCloseIcon');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    const isHidden = mobileMenu.classList.contains('hidden');
+                    
+                    if (isHidden) {
+                        mobileMenu.classList.remove('hidden');
+                        mobileMenuIcon.classList.add('hidden');
+                        mobileMenuCloseIcon.classList.remove('hidden');
+                    } else {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuIcon.classList.remove('hidden');
+                        mobileMenuCloseIcon.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (mobileMenu && !mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                    mobileMenu.classList.add('hidden');
+                    mobileMenuIcon.classList.remove('hidden');
+                    mobileMenuCloseIcon.classList.add('hidden');
+                }
+            });
+        });
+
+        async function renameFile(oldName, newName) {
+            try {
+                const formData = new FormData();
+                formData.append('old', oldName);
+                formData.append('new', newName);
+                
+                const response = await fetch('/rename', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update the input's original value
+                    const input = document.querySelector(`[data-original="${oldName}"]`);
+                    if (input) {
+                        input.dataset.original = newName;
+                    }
+                    showNotification('File renamed successfully', 'success');
+                } else {
+                    showNotification('Failed to rename file: ' + result.error, 'error');
+                    // Revert the input value
+                    const input = document.querySelector(`[data-original="${oldName}"]`);
+                    if (input) {
+                        input.value = oldName;
+                    }
+                }
+            } catch (error) {
+                showNotification('Error renaming file: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteFile(filename) {
+            if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('target', filename);
+                
+                const response = await fetch('/delete', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Remove the file element from the gallery
+                    const fileElement = document.querySelector(`[data-original="${filename}"]`).closest('.bg-white.border');
+                    fileElement.remove();
+                    showNotification('File deleted successfully', 'success');
+                } else {
+                    showNotification('Failed to delete file: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Error deleting file: ' + error.message, 'error');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Fullscreen video logic
+        function fullscreenVideo(btn) {
+            const video = btn.parentElement.querySelector('video');
+            if (!video) return;
+            
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'fullscreen-overlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    document.exitFullscreen?.();
+                    overlay.remove();
+                    video.classList.remove('fullscreen-video', 'vertical', 'horizontal');
+                    video.controls = true;
+                }
+            };
+            document.body.appendChild(overlay);
+            
+            // Make video fullscreen
+            video.classList.add('fullscreen-video');
+            video.controls = true;
+            
+            // Function to apply orientation class
+            const applyOrientationClass = () => {
+                if (video.videoWidth && video.videoHeight) {
+                    const aspectRatio = video.videoWidth / video.videoHeight;
+                    if (aspectRatio < 1) {
+                        // Vertical video
+                        video.classList.add('vertical');
+                    } else {
+                        // Horizontal video
+                        video.classList.add('horizontal');
+                    }
+                }
+            };
+            
+            // Detect video orientation and apply appropriate class
+            video.addEventListener('loadedmetadata', applyOrientationClass, { once: true });
+            
+            // Load metadata if not already loaded
+            if (video.readyState >= 1) {
+                applyOrientationClass();
+            } else {
+                // Fallback: apply default class if metadata not available
+                video.classList.add('horizontal');
+            }
+            
+            video.play();
+            
+            // Try native fullscreen
+            if (video.requestFullscreen) {
+                video.requestFullscreen().catch(err => {
+                    console.log('Native fullscreen not supported:', err);
+                });
+            }
+        }
+
+        function openInExplorer(filename) {
+            if (!confirm(`Are you sure you want to open "${filename}" in Explorer?`)) {
+                return;
+            }
+            
+            try {
+                fetch('/open_in_explorer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'filename=' + encodeURIComponent(filename)
+                })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('File opened in Explorer', 'success');
+                    } else {
+                        showNotification('Failed to open file in Explorer: ' + (data.error || 'Unknown error'), 'error');
+                    }
+                });
+            } catch (error) {
+                showNotification('Error opening file in Explorer: ' + error.message, 'error');
+            }
+        }
+    </script>
+
+    <!-- Floating Console -->
+    <div id="floatingConsole" class="floating-console">
+        <div class="console-header">
+            <span>🔧 Jenna Console - Real-time Logs</span>
+            <button class="console-toggle" onclick="toggleConsole()">Hide Console</button>
+        </div>
+        <div id="consoleContent" class="console-content">
+            <div class="console-line">[Console] Initializing floating console...</div>
+            <div class="console-line">[Console] Ready to display real-time logs</div>
+        </div>
+    </div>
+
+    <script>
+        // Global toggle function for the console
+        function toggleConsole() {
+            const console = document.getElementById('floatingConsole');
+            const toggleBtn = document.querySelector('.console-toggle');
+            const jennaContainer = document.querySelector('.jenna-svg-container');
+            
+            if (console.classList.contains('show')) {
+                console.classList.remove('show');
+                toggleBtn.textContent = 'Show Console';
+                jennaContainer.classList.remove('active');
+            } else {
+                console.classList.add('show');
+                toggleBtn.textContent = 'Hide Console';
+                jennaContainer.classList.add('active');
+                // Start console stream if not already started
+                if (window.startConsoleStream) {
+                    window.startConsoleStream();
+                }
+            }
+        }
+
+        // Matrix particle effect
+        function createMatrixParticles() {
+            const particlesContainer = document.getElementById('matrixParticles');
+            if (!particlesContainer) return;
+            
+            const matrixChars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.className = 'matrix-particle';
+                particle.textContent = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                particle.style.animationDuration = (1 + Math.random() * 2) + 's';
+                
+                particlesContainer.appendChild(particle);
+                
+                // Remove particle after animation
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 3000);
+            }
+            
+            // Create particles periodically
+            setInterval(createParticle, 100);
+        }
+
+        // Floating Console functionality
+        let consoleEventSource = null;
+
+        function startConsoleStream() {
+            if (consoleEventSource) {
+                consoleEventSource.close();
+            }
+
+            consoleEventSource = new EventSource('/console/stream');
+            
+            consoleEventSource.onmessage = function(event) {
+                addConsoleLine(event.data);
+            };
+
+            consoleEventSource.onerror = function(event) {
+                console.error('Console stream error:', event);
+                // Try to reconnect after 5 seconds
+                setTimeout(() => {
+                    if (consoleEventSource) {
+                        startConsoleStream();
+                    }
+                }, 5000);
+            };
+        }
+
+        function addConsoleLine(message) {
+            const consoleContent = document.getElementById('consoleContent');
+            if (!consoleContent) return;
+
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.textContent = message;
+            consoleContent.appendChild(line);
+
+            // Auto-scroll to bottom
+            consoleContent.scrollTop = consoleContent.scrollHeight;
+
+            // Keep only last 100 lines
+            const lines = consoleContent.querySelectorAll('.console-line');
+            if (lines.length > 100) {
+                lines[0].remove();
+            }
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (consoleEventSource) {
+                consoleEventSource.close();
+            }
+        });
+    </script>
+</body>
+</html> 
