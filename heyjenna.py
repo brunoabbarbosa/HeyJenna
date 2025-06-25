@@ -50,6 +50,8 @@ class ConsoleLogger:
     
     def error(self, msg):
         log_to_console(f"[yt-dlp ERROR] {msg}")
+        # Also log to stderr for debugging
+        print(f"yt-dlp ERROR: {msg}", file=sys.stderr)
 
 def log_to_console(message):
     """Add message to console logs"""
@@ -157,6 +159,9 @@ def try_ytdlp_generic_extractor(url):
 
 def normalize_filename(title, extractor_key, uploader, is_mp3=False):
     """Normalize filename according to specifications"""
+    # Debug logging
+    log_to_console(f"Normalizing filename - Title: {title}, Extractor: {extractor_key}, Uploader: {uploader}")
+    
     # Strip #, emojis, and special characters
     title = re.sub(r'[#@$%^&*()_+=\[\]{}|\\:";\'<>?,./]', '', title)
     title = re.sub(r'[^\w\s.-]', '', title)  # Keep only alphanumeric, spaces, dots, hyphens
@@ -170,6 +175,7 @@ def normalize_filename(title, extractor_key, uploader, is_mp3=False):
     
     # Get origin prefix from config
     origin = app.config['PLATFORM_NAMES'].get(extractor_key, extractor_key[:2].upper())
+    log_to_console(f"Platform mapping - Extractor: {extractor_key} -> Origin: {origin}")
     
     # Clean uploader name
     uploader = re.sub(r'[^\w]', '', uploader) if uploader else 'unknown'
@@ -178,7 +184,10 @@ def normalize_filename(title, extractor_key, uploader, is_mp3=False):
     extension = '.mp3' if is_mp3 else '.mp4'
     
     # New format: ORIGIN.Just.First.Six.Words.CHANNEL.mp4
-    return f"{origin}.{title}.{uploader}{extension}"
+    final_filename = f"{origin}.{title}.{uploader}{extension}"
+    log_to_console(f"Final filename: {final_filename}")
+    
+    return final_filename
 
 @app.route('/')
 def index():
@@ -220,6 +229,108 @@ def console_stream():
     
     return Response(generate(), mimetype='text/event-stream')
 
+@app.route('/process', methods=['POST'])
+def process():
+    """Process video URLs from the new interface"""
+    try:
+        data = request.get_json()
+        url = data.get('url', '').strip()
+        
+        if not url:
+            return jsonify({'error': 'URL is required'}), 400
+        
+        log_to_console(f"Processing URL: {url}")
+        
+        # Use the existing download logic
+        return download_single_url(url)
+        
+    except Exception as e:
+        log_to_console(f"Error processing URL: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+def download_single_url(url):
+    """Download a single URL - extracted from the main download function"""
+    try:
+        # Validate URL
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        
+        # Check if platform is supported
+        supported = False
+        for platform in app.config['SUPPORTED_PLATFORMS']:
+            if platform in url.lower():
+                supported = True
+                break
+        
+        if not supported:
+            return jsonify({'error': f'Unsupported platform: {url}'}), 400
+        
+        # Get cookies file if available
+        cookies_file = get_cookies_file(url)
+        
+        # Set up yt-dlp options
+        ydl_opts = {
+            'format': app.config['VIDEO_QUALITY'],
+            'outtmpl': os.path.join(app.config['UPLOAD_FOLDER'], '%(title)s.%(ext)s'),
+            'cookiefile': cookies_file,
+            'user_agent': app.config['USER_AGENT'],
+            'logger': ConsoleLogger(),
+            'ignoreerrors': True,
+        }
+        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # Extract info first
+            info = ydl.extract_info(url, download=False)
+            if not info:
+                return jsonify({'error': 'Could not extract video information'}), 400
+            
+            title = info.get('title', 'Unknown Title')
+            uploader = info.get('uploader', 'Unknown')
+            extractor = info.get('extractor', 'unknown')
+            
+            # Download the video
+            ydl.download([url])
+            
+            # Find the downloaded file
+            downloaded_files = []
+            for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+                if filename.endswith(('.mp4', '.webm', '.mkv', '.mp3')):
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    # Check if this file was recently created (within last 30 seconds)
+                    if time.time() - os.path.getmtime(file_path) < 30:
+                        downloaded_files.append(filename)
+            
+            if downloaded_files:
+                # Rename the most recent file
+                latest_file = max(downloaded_files, key=lambda f: os.path.getmtime(os.path.join(app.config['UPLOAD_FOLDER'], f)))
+                
+                # Normalize filename
+                normalized_name = normalize_filename(title, extractor, uploader)
+                old_path = os.path.join(app.config['UPLOAD_FOLDER'], latest_file)
+                new_path = os.path.join(app.config['UPLOAD_FOLDER'], normalized_name)
+                
+                # Rename if different
+                if latest_file != normalized_name:
+                    try:
+                        os.rename(old_path, new_path)
+                        log_to_console(f"Renamed {latest_file} to {normalized_name}")
+                    except Exception as e:
+                        log_to_console(f"Failed to rename file: {str(e)}")
+                        normalized_name = latest_file
+                
+                return jsonify({
+                    'success': True,
+                    'title': title,
+                    'uploader': uploader,
+                    'filename': normalized_name
+                })
+            else:
+                return jsonify({'error': 'Download completed but file not found'}), 500
+                
+    except Exception as e:
+        log_to_console(f"Download error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/download', methods=['POST'])
 def download():
     data = request.get_json()
@@ -229,6 +340,9 @@ def download():
     results = []
 
     log_to_console(f"Starting download of {len(links)} links")
+    
+    # Clean up any incomplete downloads before starting
+    clean_incomplete_downloads()
 
     for i, url in enumerate(links):
         try:
@@ -267,10 +381,20 @@ def download():
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 # Extract info first
                 log_to_console(f"Extracting info for: {url}")
-                meta = ydl.extract_info(url, download=False)
-                title = meta.get('title', 'video')
-                extractor_key = meta.get('extractor_key', 'Unknown')
-                uploader = meta.get('uploader', 'unknown')
+                try:
+                    meta = ydl.extract_info(url, download=False)
+                    if not meta:
+                        raise Exception("Failed to extract video metadata")
+                    
+                    title = meta.get('title', 'video')
+                    extractor_key = meta.get('extractor_key', 'Unknown')
+                    uploader = meta.get('uploader', 'unknown')
+                    
+                    log_to_console(f"Extracted metadata - Title: {title}, Extractor: {extractor_key}, Uploader: {uploader}")
+                    
+                except Exception as extract_error:
+                    log_to_console(f"ERROR: Failed to extract metadata for {url}: {str(extract_error)}")
+                    raise Exception(f"Metadata extraction failed: {str(extract_error)}")
                 
                 # Check if file already exists
                 normalized_name = normalize_filename(title, extractor_key, uploader, mp3_only)
@@ -322,26 +446,42 @@ def download():
                             log_to_console(f"Download successful with format: {current_format}")
                             break
                         else:
-                            log_to_console(f"Format {current_format} failed, trying next...")
-                    except Exception as e:
-                        log_to_console(f"Format {current_format} failed: {str(e)}, trying next...")
+                            log_to_console(f"WARNING: Format {current_format} failed - no file found with uid {uid}")
+                    except Exception as format_error:
+                        log_to_console(f"ERROR: Format {current_format} failed: {str(format_error)}")
                         continue
                 
                 if not download_success:
-                    raise Exception("All download formats failed")
+                    log_to_console(f"ERROR: All download formats failed for {url}")
+                    raise Exception("All download formats failed - no file was downloaded")
                 
                 # Find the downloaded file
                 downloaded_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.startswith(uid)]
                 if not downloaded_files:
-                    raise Exception("No file downloaded")
+                    log_to_console(f"ERROR: No file found after successful download for {url}")
+                    raise Exception("No file downloaded despite successful download report")
                 
                 temp_file = os.path.join(app.config['UPLOAD_FOLDER'], downloaded_files[0])
+                log_to_console(f"Found downloaded file: {downloaded_files[0]}")
                 
                 # Rename to final name
                 if os.path.exists(temp_file):
-                    os.rename(temp_file, final_file)
+                    try:
+                        os.rename(temp_file, final_file)
+                        log_to_console(f"Renamed {downloaded_files[0]} to {normalized_name}")
+                    except Exception as rename_error:
+                        log_to_console(f"ERROR: Failed to rename file: {str(rename_error)}")
+                        raise Exception(f"File rename failed: {str(rename_error)}")
+                else:
+                    log_to_console(f"ERROR: Temp file not found after download: {temp_file}")
+                    raise Exception("Temporary file not found after download")
                 
                 log_to_console(f"Downloaded: {normalized_name}")
+                
+                # Verify the file actually exists before returning the result
+                if not os.path.exists(final_file):
+                    log_to_console(f"ERROR: File was supposed to be downloaded but doesn't exist: {final_file}")
+                    raise Exception(f"Download completed but file not found: {normalized_name}")
                 
                 info['filename'] = normalized_name
                 info['title'] = title
@@ -360,6 +500,7 @@ def download():
                         log_to_console(f"Converted to MP3: {os.path.basename(audio_path)}")
                     except Exception as e:
                         log_to_console(f"MP3 conversion failed: {str(e)}")
+                        info['conversion_error'] = str(e)
                 
                 # Transcribe if requested
                 if transcribe:
@@ -383,19 +524,37 @@ def download():
                 results.append(info)
 
         except Exception as e:
-            log_to_console(f"Error processing {url}: {str(e)}")
+            error_msg = f"Error processing {url}: {str(e)}"
+            log_to_console(f"ERROR: {error_msg}")
+            log_to_console(f"ERROR: Full traceback: {traceback.format_exc()}")
             results.append({
                 'url': url, 
                 'index': i, 
                 'error': str(e),
-                'status': 'failed'
+                'status': 'failed',
+                'error_details': traceback.format_exc()
             })
 
-    log_to_console(f"Download session complete: {len([r for r in results if not r.get('error')])} successful, {len([r for r in results if r.get('error')])} failed")
+    successful_count = len([r for r in results if not r.get('error')])
+    failed_count = len([r for r in results if r.get('error')])
+    log_to_console(f"Download session complete: {successful_count} successful, {failed_count} failed")
+    
+    if failed_count > 0:
+        log_to_console(f"ERROR: {failed_count} downloads failed in this session")
+    
     return jsonify(results)
+
+@app.route('/file/<path:filename>')
+def file(filename):
+    """Serve files from downloads directory"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/downloads/<path:filename>')
 def download_file(filename):
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.exists(file_path):
+        log_to_console(f"404 ERROR: File not found: {filename}")
+        return jsonify({'error': 'File not found'}), 404
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/subtitles/<path:filename>')
@@ -580,7 +739,10 @@ def open_downloads_folder():
     try:
         # Detect WSL2
         if 'WSL_DISTRO_NAME' in os.environ or 'microsoft-standard' in os.uname().release:
-            unc_path = r'\\wsl.localhost\Ubuntu\home\rapsa\heyjenna\downloads'
+            current_path = os.getcwd()
+            wsl_distro = os.environ.get('WSL_DISTRO_NAME', 'Ubuntu')
+            win_path = current_path.replace('/', '\\')
+            unc_path = f'\\\\wsl.localhost\\{wsl_distro}{win_path}\\{folder}'
             subprocess.Popen(['explorer.exe', unc_path])
         elif sys.platform.startswith('darwin'):
             subprocess.Popen(['open', folder])
@@ -602,7 +764,10 @@ def open_in_explorer():
         log_to_console(f"[Explorer] Trying to open: {file_path}")
         # Detect WSL2
         if 'WSL_DISTRO_NAME' in os.environ or 'microsoft-standard' in os.uname().release:
-            unc_path = r'\\wsl.localhost\Ubuntu\home\rapsa\heyjenna\downloads'
+            current_path = os.getcwd()
+            wsl_distro = os.environ.get('WSL_DISTRO_NAME', 'Ubuntu')
+            win_path = current_path.replace('/', '\\')
+            unc_path = f'\\\\wsl.localhost\\{wsl_distro}{win_path}\\{app.config["UPLOAD_FOLDER"]}'
             subprocess.Popen(['explorer.exe', unc_path])
         elif sys.platform.startswith('darwin'):
             cmd = ['open', '-R', file_path]
@@ -814,24 +979,193 @@ def test_spa():
     return render_template("test-spa.html", downloads=downloads, transcripts=transcripts, files=files)
 
 def clean_incomplete_downloads():
-    """Remove .part files and any incomplete downloads from the downloads folder."""
-    folder = app.config['UPLOAD_FOLDER']
-    removed = 0
-    for fname in os.listdir(folder):
-        if fname.endswith('.part') or fname.endswith('.tmp') or fname.startswith('yt-dlp-'):
-            try:
-                os.remove(os.path.join(folder, fname))
-                removed += 1
-                log_to_console(f"Removed incomplete file: {fname}")
-            except Exception as e:
-                log_to_console(f"Failed to remove {fname}: {e}")
-    if removed:
-        log_to_console(f"Cleanup complete: {removed} incomplete files removed.")
-    else:
-        log_to_console("Cleanup complete: No incomplete files found.")
+    """Clean up incomplete downloads and temporary files"""
+    try:
+        log_to_console("Cleaning up incomplete downloads...")
+        cleaned_count = 0
+        
+        # Look for temporary files
+        temp_patterns = ['*.part', '*.tmp', '*.temp', '*.download', '*.f137', '*.f140']
+        
+        for pattern in temp_patterns:
+            import glob
+            temp_files = glob.glob(os.path.join(app.config['UPLOAD_FOLDER'], pattern))
+            for temp_file in temp_files:
+                try:
+                    os.remove(temp_file)
+                    log_to_console(f"Cleaned up temp file: {os.path.basename(temp_file)}")
+                    cleaned_count += 1
+                except Exception as e:
+                    log_to_console(f"Failed to clean up {temp_file}: {str(e)}")
+        
+        # Look for files with UUID patterns that might be incomplete
+        import re
+        uuid_pattern = re.compile(r'^[a-f0-9]{8}\.')
+        for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+            if uuid_pattern.match(filename):
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                try:
+                    # Check if file is older than 1 hour (incomplete download)
+                    if time.time() - os.path.getmtime(file_path) > 3600:
+                        os.remove(file_path)
+                        log_to_console(f"Cleaned up old incomplete file: {filename}")
+                        cleaned_count += 1
+                except Exception as e:
+                    log_to_console(f"Failed to clean up {filename}: {str(e)}")
+        
+        log_to_console(f"Cleanup complete: {cleaned_count} files removed")
+        return cleaned_count
+        
+    except Exception as e:
+        log_to_console(f"ERROR: Cleanup failed: {str(e)}")
+        return 0
 
 # Run cleanup on startup
 clean_incomplete_downloads()
+
+@app.route('/cleanup', methods=['POST'])
+def cleanup_downloads():
+    """Manually trigger cleanup of incomplete downloads"""
+    try:
+        cleaned_count = clean_incomplete_downloads()
+        return jsonify({'success': True, 'cleaned_count': cleaned_count})
+    except Exception as e:
+        log_to_console(f"ERROR: Manual cleanup failed: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Check the health of the downloads system"""
+    try:
+        health_info = {
+            'downloads_folder': app.config['UPLOAD_FOLDER'],
+            'subtitles_folder': app.config['SUBTITLE_FOLDER'],
+            'downloads_count': 0,
+            'subtitles_count': 0,
+            'incomplete_files': 0,
+            'errors': []
+        }
+        
+        # Check downloads folder
+        if os.path.exists(app.config['UPLOAD_FOLDER']):
+            files = os.listdir(app.config['UPLOAD_FOLDER'])
+            health_info['downloads_count'] = len(files)
+            
+            # Check for incomplete files
+            incomplete_patterns = ['*.part', '*.tmp', '*.temp', '*.download']
+            import glob
+            for pattern in incomplete_patterns:
+                incomplete_files = glob.glob(os.path.join(app.config['UPLOAD_FOLDER'], pattern))
+                health_info['incomplete_files'] += len(incomplete_files)
+        else:
+            health_info['errors'].append('Downloads folder does not exist')
+        
+        # Check subtitles folder
+        if os.path.exists(app.config['SUBTITLE_FOLDER']):
+            files = os.listdir(app.config['SUBTITLE_FOLDER'])
+            health_info['subtitles_count'] = len(files)
+        else:
+            health_info['errors'].append('Subtitles folder does not exist')
+        
+        return jsonify(health_info)
+        
+    except Exception as e:
+        log_to_console(f"ERROR: Health check failed: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/edit', methods=['POST'])
+def edit():
+    """Transcribe uploaded file"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Get language settings
+        src_lang = request.form.get('src_lang', '').strip()
+        target_lang = request.form.get('target_lang', '').strip()
+        
+        # Save uploaded file
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        
+        log_to_console(f"Processing file for transcription: {filename}")
+        
+        # Transcribe the file
+        try:
+            result = model.transcribe(file_path, language=src_lang if src_lang else None)
+            transcription = result["text"].strip()
+            
+            # Translate if target language specified
+            translation = ""
+            if target_lang and transcription:
+                try:
+                    translation_result = translator.translate(transcription, dest=target_lang)
+                    translation = translation_result.text
+                    log_to_console(f"Translation completed: {src_lang} -> {target_lang}")
+                except Exception as e:
+                    log_to_console(f"Translation error: {str(e)}")
+            
+            # Save transcript
+            transcript_filename = f"{os.path.splitext(filename)[0]}.txt"
+            transcript_path = os.path.join(app.config['SUBTITLE_FOLDER'], transcript_filename)
+            with open(transcript_path, 'w', encoding='utf-8') as f:
+                f.write(transcription)
+            
+            # Save translation if available
+            if translation:
+                translated_filename = f"{os.path.splitext(filename)[0]}_translated.txt"
+                translated_path = os.path.join(app.config['SUBTITLE_FOLDER'], translated_filename)
+                with open(translated_path, 'w', encoding='utf-8') as f:
+                    f.write(translation)
+            
+            return render_template('index.html', 
+                                transcription=transcription,
+                                filename=filename,
+                                files=os.listdir(app.config['UPLOAD_FOLDER']))
+            
+        except Exception as e:
+            log_to_console(f"Transcription error: {str(e)}")
+            return jsonify({'error': f'Transcription failed: {str(e)}'}), 500
+            
+    except Exception as e:
+        log_to_console(f"Edit error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/save_transcript', methods=['POST'])
+def save_transcript():
+    """Save transcript to file"""
+    try:
+        text = request.form.get('text', '').strip()
+        filename = request.form.get('filename', '').strip()
+        
+        if not text or not filename:
+            return jsonify({'error': 'Text and filename are required'}), 400
+        
+        # Generate transcript filename
+        base_name = os.path.splitext(filename)[0]
+        transcript_filename = f"{base_name}.txt"
+        transcript_path = os.path.join(app.config['SUBTITLE_FOLDER'], transcript_filename)
+        
+        # Save transcript
+        with open(transcript_path, 'w', encoding='utf-8') as f:
+            f.write(text)
+        
+        log_to_console(f"Saved transcript: {transcript_filename}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Transcript saved successfully',
+            'filename': transcript_filename
+        })
+        
+    except Exception as e:
+        log_to_console(f"Error saving transcript: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print(f"🚀 Starting Jenna The Temp on {app.config['HOST']}:{app.config['PORT']}")

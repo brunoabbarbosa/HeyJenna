@@ -8,5 +8,4 @@
 .facebook.com	TRUE	/	TRUE	1780927287	ps_l	1
 .facebook.com	TRUE	/	TRUE	1780927287	ps_n	1
 .facebook.com	TRUE	/	TRUE	1780929041	sb	FgvzZ7gM-YTIzhuGLbeaISJ8
-.facebook.com	TRUE	/	TRUE	1750722759	wd	1365x945
 .facebook.com	TRUE	/	TRUE	1781651104	xs	9%3AYp40TW1f32vM2w%3A2%3A1746369041%3A-1%3A-1%3A%3AAcXaov1IPhrmoSgc38qvxwj6ZjYZR8dYEHhMTS3jqj0

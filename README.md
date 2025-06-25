@@ -25,7 +25,19 @@ The application provides three main interfaces:
 - Dependencies listed in `requirements.txt`
 - **Cookie files** for some platforms (optional, for authenticated downloads)
 
-## Installation
+## Quick Start
+
+### Windows
+1. **Download and extract** the project
+2. **Double-click** `run.bat` to start the application
+3. **Open your browser** and go to `http://localhost:5000`
+
+### Linux/macOS
+1. **Download and extract** the project
+2. **Run** `./run.sh` in terminal
+3. **Open your browser** and go to `http://localhost:5000`
+
+## Manual Installation
 
 1. **Clone the repository**
 ```bash
@@ -51,7 +63,7 @@ pip install -r requirements.txt
 
 5. **Configure the application (optional)**
 ```bash
-cp .env.example .env
+cp env.example .env
 # Edit .env file with your preferred settings
 ```
 
@@ -107,7 +119,7 @@ You can configure the application using environment variables or a `.env` file:
 
 ```bash
 # Copy the example environment file
-cp .env.example .env
+cp env.example .env
 # Edit .env with your preferred settings
 ```
 
@@ -153,6 +165,9 @@ heyjenna/
 ├── README.md               # This file
 ├── LICENSE                 # MIT License
 ├── .gitignore             # Git ignore rules
+├── run.bat                # Windows startup script
+├── run.sh                 # Linux/macOS startup script
+├── env.example            # Environment variables example
 ├── downloads/             # Downloaded video files (ignored)
 ├── subtitles/             # Generated transcripts (ignored)
 ├── Translations/          # Translation files (ignored)
@@ -186,6 +201,21 @@ heyjenna/
 - `GET /file/<filename>` - Download files
 - `POST /edit` - Transcribe uploaded files
 - `POST /save_transcript` - Save transcripts
+
+## Troubleshooting
+
+### Common Issues
+
+1. **FFmpeg not found**: Install FFmpeg and add it to your system PATH
+2. **Python version issues**: Use Python 3.10.14 for best compatibility
+3. **Permission errors**: Make sure you have write permissions in the project directory
+4. **Port already in use**: Change the port in the configuration or kill the process using port 5000
+
+### Windows Specific
+
+- **WSL users**: The application automatically detects WSL and opens Windows Explorer correctly
+- **Firewall**: Allow Python through Windows Firewall if prompted
+- **Antivirus**: Some antivirus software may flag the application, add it to exclusions if needed
 
 ## Contributing
 

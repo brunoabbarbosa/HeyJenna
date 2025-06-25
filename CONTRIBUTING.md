@@ -1,130 +1,141 @@
 # Contributing to HeyJenna
 
-Thank you for your interest in contributing to HeyJenna! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to HeyJenna! This document provides guidelines and information for contributors.
 
 ## Getting Started
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/HeyJenna.git
-   cd HeyJenna
-   ```
-3. **Set up the development environment** following the README.md instructions
-4. **Create a new branch** for your feature or bug fix:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+### Prerequisites
 
-## Development Setup
+- Python 3.10.14 (recommended)
+- FFmpeg installed and in PATH
+- Git
 
-1. **Install Python 3.10.14** (required version)
-2. **Create a virtual environment**:
-   ```bash
-   python3.10 -m venv env
-   source env/bin/activate  # On Windows: env\Scripts\activate
-   ```
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Install FFmpeg** for your operating system
-5. **Copy environment configuration**:
-   ```bash
-   cp .env.example .env
-   ```
+### Setup Development Environment
 
-## Making Changes
+1. **Fork and clone the repository**
+```bash
+git clone https://github.com/YOUR_USERNAME/HeyJenna.git
+cd HeyJenna
+```
+
+2. **Create a virtual environment**
+```bash
+python3.10 -m venv env
+source env/bin/activate  # On Windows: env\Scripts\activate
+```
+
+3. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+4. **Set up environment variables**
+```bash
+cp env.example .env
+# Edit .env file with your preferred settings
+```
+
+5. **Run the application**
+```bash
+python heyjenna.py
+```
+
+## Development Guidelines
 
 ### Code Style
-- Follow PEP 8 Python style guidelines
+
+- Follow PEP 8 style guidelines
 - Use meaningful variable and function names
 - Add comments for complex logic
 - Keep functions focused and small
 
 ### Testing
-- Test your changes thoroughly
-- Ensure the application starts without errors
-- Test with different video platforms if applicable
-- Verify transcription and translation features work
 
-### Commit Messages
-Use clear, descriptive commit messages:
-```
-Add support for new video platform
-Fix transcription error handling
-Update README with installation instructions
-```
+Before submitting a pull request:
 
-## Types of Contributions
+1. **Test the feature** thoroughly
+2. **Test on different platforms** (Windows, Linux, macOS)
+3. **Test with different video sources** (YouTube, TikTok, etc.)
+4. **Check for memory leaks** with large files
+5. **Verify error handling** works correctly
 
-### Bug Reports
-When reporting bugs, please include:
-- Python version and operating system
-- Steps to reproduce the issue
-- Expected vs actual behavior
-- Error messages or logs
-- Video URLs that cause issues (if applicable)
+### File Structure
 
-### Feature Requests
-For new features, please:
-- Describe the feature and its use case
-- Explain why it would be valuable
-- Consider implementation complexity
-- Check if similar features already exist
+- Keep the existing file structure
+- Add new templates to `templates/` directory
+- Add new static files to `static/` directory
+- Update `requirements.txt` if adding new dependencies
 
-### Code Contributions
-We welcome contributions for:
-- Bug fixes
-- New platform support
-- UI/UX improvements
-- Performance optimizations
-- Documentation improvements
-- Test coverage
+## Common Development Tasks
 
-## Platform Support
+### Adding a New Platform
 
-When adding support for new platforms:
-1. Update `SUPPORTED_PLATFORMS` in `config.py`
-2. Add platform name mapping in `PLATFORM_NAMES`
-3. Test download functionality thoroughly
-4. Update documentation
+1. **Update platform detection** in `heyjenna.py`
+2. **Add cookie file mapping** in `config.py`
+3. **Test with sample URLs**
+4. **Update documentation**
+
+### Adding a New Feature
+
+1. **Create a feature branch**
+2. **Implement the feature**
+3. **Add tests if applicable**
+4. **Update documentation**
+5. **Test thoroughly**
+
+### Bug Fixes
+
+1. **Reproduce the bug**
+2. **Identify the root cause**
+3. **Fix the issue**
+4. **Test the fix**
+5. **Add regression tests if needed**
 
 ## Pull Request Process
 
-1. **Update documentation** if needed
-2. **Test your changes** thoroughly
-3. **Create a pull request** with:
-   - Clear title and description
-   - Reference any related issues
-   - List of changes made
-   - Screenshots for UI changes
+1. **Create a feature branch** from `main`
+2. **Make your changes**
+3. **Test thoroughly**
+4. **Update documentation** if needed
+5. **Submit a pull request**
 
-4. **Respond to feedback** and make requested changes
-5. **Ensure CI passes** (if applicable)
+### Pull Request Guidelines
+
+- **Clear title** describing the change
+- **Detailed description** of what was changed and why
+- **Screenshots** for UI changes
+- **Test instructions** for reviewers
+- **Link to related issues** if applicable
 
 ## Code Review
 
-All contributions go through code review:
-- Be open to feedback and suggestions
-- Respond promptly to review comments
-- Make requested changes in a timely manner
-- Ask questions if feedback is unclear
+All contributions require code review. Reviewers will check:
+
+- **Code quality** and style
+- **Functionality** and edge cases
+- **Security** implications
+- **Performance** impact
+- **Documentation** updates
+
+## Reporting Issues
+
+When reporting issues:
+
+1. **Use the issue template**
+2. **Provide detailed steps** to reproduce
+3. **Include system information** (OS, Python version, etc.)
+4. **Add error messages** and logs
+5. **Include sample URLs** if relevant
 
 ## Getting Help
 
-If you need help:
-- Check existing issues and discussions
-- Create a new issue with your question
-- Be specific about what you're trying to achieve
-- Include relevant code snippets or error messages
+- **Check existing issues** for similar problems
+- **Search documentation** for solutions
+- **Ask in discussions** for general questions
+- **Create an issue** for bugs or feature requests
 
 ## License
 
 By contributing to HeyJenna, you agree that your contributions will be licensed under the MIT License.
 
-## Recognition
-
-Contributors will be recognized in the project documentation and release notes.
-
-Thank you for helping make HeyJenna better! 🎉
+Thank you for contributing to HeyJenna! 🚀
